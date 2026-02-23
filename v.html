@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fourth Year Course</title>
+  <title>Nexus Video Player</title>
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <style>
@@ -11,7 +11,7 @@
       padding: 0;
       background: #000;
       overflow-x: hidden;
-      font-family: Arial, sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
     }
     
     #loading-screen {
@@ -36,7 +36,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.98);
+      background: linear-gradient(135deg, #6c5ce7, #a363d9);
       color: white;
       z-index: 1001;
       display: none;
@@ -55,9 +55,10 @@
     }
     
     #auth-message h2 {
-      color: #ff4444;
+      color: white;
       margin-bottom: 20px;
       font-size: 28px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
     
     #auth-message p {
@@ -65,28 +66,30 @@
       font-size: 18px;
       max-width: 500px;
       line-height: 1.6;
+      opacity: 0.9;
     }
     
     #login-btn, #back-btn {
       padding: 14px 28px;
-      background: #007bff;
+      background: #00d2d3;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 16px;
       font-weight: bold;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0,210,211,0.4);
       text-decoration: none;
       display: inline-block;
       text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     
     #login-btn:hover, #back-btn:hover {
-      background: #0056b3;
+      background: #00a8a9;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+      box-shadow: 0 8px 25px rgba(0,210,211,0.5);
     }
     
     #back-btn {
@@ -94,14 +97,16 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #28a745;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
       z-index: 999;
       padding: 12px 24px;
       display: none;
     }
     
     #back-btn:hover {
-      background: #218838;
+      background: rgba(255,255,255,0.2);
     }
     
     #player {
@@ -118,7 +123,7 @@
       opacity: 1;
     }
     
-    /* Plyr কাস্টম স্টাইল - ফুলস্ক্রিনে কন্ট্রোলার হাইড করার জন্য */
+    /* Plyr custom styles */
     .plyr--fullscreen .plyr__controls {
       opacity: 0;
       transition: opacity 0.5s ease;
@@ -132,26 +137,6 @@
       background: #000;
     }
     
-    /* Smooth transitions */
-    .fade-in {
-      animation: fadeIn 0.5s ease forwards;
-    }
-    
-    .fade-out {
-      animation: fadeOut 0.3s ease forwards;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-    
-    /* মোবাইল ডিভাইসের জন্য বিশেষ স্টাইল */
     @media (max-width: 768px) {
       #player {
         width: 100vw;
@@ -159,10 +144,9 @@
       }
       
       .plyr {
-        --plyr-color-main: #f00;
+        --plyr-color-main: #6c5ce7;
       }
       
-      /* মোবাইলে কন্ট্রোলার বড় করুন */
       .plyr__controls {
         padding: 10px !important;
       }
@@ -174,10 +158,6 @@
       
       .plyr__time {
         font-size: 14px !important;
-      }
-      
-      #auth-message {
-        padding: 15px;
       }
       
       #auth-message h2 {
@@ -195,21 +175,21 @@
       
       #back-btn {
         bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
         width: 90%;
         max-width: 300px;
       }
     }
     
-    /* ডেস্কটপের জন্য */
     @media (min-width: 769px) {
       #back-btn {
         bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
         min-width: 150px;
       }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -218,19 +198,19 @@
   <div id="loading-screen">
     <div style="text-align: center;">
       <div style="margin-bottom: 20px; font-size: 24px;">Loading...</div>
-      <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #007bff; border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite;"></div>
+      <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #6c5ce7; border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite;"></div>
     </div>
   </div>
   
   <!-- Authentication Message -->
   <div id="auth-message">
-    <h2>Welcome to Fourth Year Course</h2>
-    <p>Please login with your Google account to access the video content.</p>
+    <h2>Welcome to Nexus Video</h2>
+    <p>Please login with your Google account to access this content.</p>
     <button id="login-btn">Login with Google</button>
   </div>
   
   <!-- Back Button -->
-  <button id="back-btn">Back to Home</button>
+  <button id="back-btn">← Back to Portal</button>
   
   <!-- Video Player -->
   <div id="player" data-plyr-provider="youtube" data-plyr-embed-id=""></div>
@@ -259,8 +239,7 @@
       projectId: "fouth-year",
       storageBucket: "fouth-year.firebasestorage.app",
       messagingSenderId: "771603556892",
-      appId: "1:771603556892:web:51ae0bd68acf6678a14dd9",
-      measurementId: "G-XWWT64FGJR"
+      appId: "1:771603556892:web:51ae0bd68acf6678a14dd9"
     };
 
     // Initialize Firebase
@@ -348,11 +327,12 @@
       }
       
       try {
-        const videoRef = doc(db, 'videos', firestoreVideoId);
+        // ***** IMPORTANT: Use nexus_videos instead of videos *****
+        const videoRef = doc(db, 'nexus_videos', firestoreVideoId);
         const videoDoc = await getDoc(videoRef);
         
         if (!videoDoc.exists()) {
-          console.error('Video not found');
+          console.error('Video not found in nexus_videos');
           alert('Video not found');
           return;
         }
@@ -559,16 +539,6 @@
         }
       }
     });
-    
-    // CSS for spinner animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
     
   </script>
 </body>
