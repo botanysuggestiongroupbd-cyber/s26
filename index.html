@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Login | Modern User Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --primary-light: #8a7cef;
+            --secondary: #00d2d3;
+            --secondary-dark: #00a8a9;
+            --accent: #fd79a8;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --gray: #636e72;
+            --gradient-1: linear-gradient(135deg, #6c5ce7, #a363d9);
+            --gradient-2: linear-gradient(135deg, #00d2d3, #00b894);
+            --gradient-3: linear-gradient(135deg, #fd79a8, #e84393);
+            --glass: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow-sm: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --blur: blur(10px);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L100 100 M100 0 L0 100" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></svg>');
+            background-size: 50px 50px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* Loading System */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: var(--blur);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: all 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            background: var(--glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loader-logo {
+            font-size: 4rem;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .loader {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .loader-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--secondary);
+            border-right-color: var(--accent);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .loader-inner {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary-light);
+            border-left-color: white;
+            animation: spinReverse 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        .loader-text {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .loader-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        .loader-progress {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .loader-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            width: 0%;
+            animation: progress 2s ease-in-out infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; margin-left: 0; }
+            50% { width: 70%; margin-left: 30%; }
+            100% { width: 0%; margin-left: 100%; }
+        }
+
+        .loader-stats {
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .loader-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loader-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glass Card Design */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, white, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+
+        /* Login Container */
+        .login-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.4), rgba(0, 210, 211, 0.4));
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-content {
+            padding: 30px;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(0, 210, 211, 0.3));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .dashboard-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .user-info-text {
+            color: white;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .dashboard-content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Section Styles */
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .section-title i {
+            color: var(--secondary);
+        }
+
+        /* Profile Grid */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .profile-value {
+            color: white;
+            font-weight: 500;
+        }
+
+        .role-badge, .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-admin { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+        .role-moderator { background: linear-gradient(135deg, var(--secondary), var(--secondary-dark)); }
+        .role-user { background: linear-gradient(135deg, var(--gray), #4a4a4a); }
+        .status-active { background: linear-gradient(135deg, var(--success), #00997a); }
+        .status-inactive { background: linear-gradient(135deg, var(--danger), #b02e2e); }
+        .status-blocked { background: linear-gradient(135deg, var(--warning), #e0a800); }
+
+        /* Device Cards */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .device-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .device-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .current-badge {
+            background: linear-gradient(135deg, var(--success), var(--secondary));
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .device-time {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .device-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .device-detail {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .device-detail i {
+            color: var(--secondary);
+            width: 16px;
+        }
+
+        /* Video Grid */
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .video-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-thumbnail {
+            height: 180px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .video-card:hover .video-thumbnail img {
+            transform: scale(1.1);
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-thumbnail:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-overlay i {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .video-meta {
+            display: flex;
+            gap: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .video-meta i {
+            margin-right: 4px;
+            color: var(--secondary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .input-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 1;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: white;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 210, 211, 0.3);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+        }
+
+        select option {
+            background: var(--dark);
+            color: white;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #00997a);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #b02e2e);
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .btn-change-password {
+            background: linear-gradient(135deg, var(--warning), #e0a800);
+        }
+
+        .btn-view:hover, .btn-change-password:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .message-success {
+            background: linear-gradient(135deg, rgba(0, 184, 148, 0.2), rgba(0, 184, 148, 0.1));
+            border: 1px solid var(--success);
+            color: #fff;
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, rgba(214, 48, 49, 0.2), rgba(214, 48, 49, 0.1));
+            border: 1px solid var(--danger);
+            color: #fff;
+        }
+
+        .message-info {
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.1));
+            border: 1px solid var(--primary);
+            color: #fff;
+        }
+
+        .message-warning {
+            background: linear-gradient(135deg, rgba(253, 203, 110, 0.2), rgba(253, 203, 110, 0.1));
+            border: 1px solid var(--warning);
+            color: #fff;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-content {
+            padding: 25px;
+            background: var(--dark);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .admin-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .admin-link a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .admin-link a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 2rem; }
+            .dashboard-header { flex-direction: column; text-align: center; }
+            .devices-grid { grid-template-columns: 1fr; }
+            .videos-grid { grid-template-columns: 1fr; }
+            .profile-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.5rem; }
+            .login-content, .dashboard-content { padding: 20px; }
+            .device-details { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader-container">
+            <div class="loader-logo">
+                <i class="fas fa-cubes"></i>
+            </div>
+            <div class="loader">
+                <div class="loader-circle"></div>
+                <div class="loader-inner"></div>
+            </div>
+            <div class="loader-text" id="loadingMessage">Initializing Nexus...</div>
+            <div class="loader-subtext" id="loadingSubtext">Preparing your experience</div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
+            <div class="loader-stats">
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingStep">1</span>
+                    <span>Step</span>
+                </div>
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingProgress">0%</span>
+                    <span>Complete</span>
+                </div>
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingTimer">0s</span>
+                    <span>Elapsed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>✨ NEXUS PORTAL ✨</h1>
+            <p>Your Gateway to the Digital Universe</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-container">
+            <div class="glass-card">
+                <div class="login-header">
+                    <div class="login-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h2>Welcome Back</h2>
+                </div>
+                <div class="login-content">
+                    <div id="loginMessage" class="message"></div>
+                    
+                    <div class="form-group">
+                        <label><i class="far fa-envelope"></i> Email Address</label>
+                        <div class="input-container">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" placeholder="Enter your email">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <div class="input-container">
+                            <i class="fas fa-key"></i>
+                            <input type="password" id="loginPassword" placeholder="Enter your password">
+                        </div>
+                    </div>
+                    
+                    <button id="loginBtn" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Launch Portal
+                    </button>
+                    
+                    <div class="admin-link">
+                        <a href="admin.html"><i class="fas fa-shield-alt"></i> Admin Access</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
+            <div class="glass-card">
+                <div class="dashboard-header">
+                    <h2>
+                        <i class="fas fa-tachometer-alt"></i>
+                        User Dashboard
+                    </h2>
+                    <div class="user-chip">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-astronaut"></i>
+                        </div>
+                        <div class="user-info-text">
+                            <div class="user-email" id="userEmail">user@nexus.com</div>
+                            <div class="user-role" id="userRoleDisplay">User</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div id="dashboardMessage" class="message"></div>
+                    
+                    <!-- Profile Section -->
+                    <div class="section">
+                        <div class="section-title">
+                            <i class="fas fa-user-circle"></i>
+                            Profile Constellation
+                        </div>
+                        <div class="profile-grid">
+                            <div class="profile-card">
+                                <div class="profile-item">
+                                    <span class="profile-label">Full Name</span>
+                                    <span class="profile-value" id="profileName">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <span class="profile-label">Email</span>
+                                    <span class="profile-value" id="profileEmail">Loading...</span>
+                                </div>
+                                <div class="profile-item">
+                                    <span class="profile-label">Phone</span>
+                                    <span class="profile-value" id="profilePhone">Not provided</span>
+                                </div>
+                            </div>
+                            <div class="profile-card">
+                                <div class="profile-item">
+                                    <span class="profile-label">Role</span>
+                                    <span class="profile-value">
+                                        <span id="profileRole" class="role-badge role-user">User</span>
+                                    </span>
+                                </div>
+                                <div class="profile-item">
+                                    <span class="profile-label">Status</span>
+                                    <span class="profile-value">
+                                        <span id="profileStatus" class="status-badge status-active">Active</span>
+                                    </span>
+                                </div>
+                                <div class="profile-item">
+                                    <span class="profile-label">Joined</span>
+                                    <span class="profile-value" id="profileCreated">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Devices Section -->
+                    <div class="section">
+                        <div class="section-title">
+                            <i class="fas fa-laptop-code"></i>
+                            Connected Devices
+                        </div>
+                        <div id="devicesContainer" class="devices-grid">
+                            <div class="no-data">
+                                <i class="fas fa-sync-alt fa-spin"></i>
+                                <p>Scanning for devices...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Videos Section -->
+                    <div class="section">
+                        <div class="section-title">
+                            <i class="fas fa-film"></i>
+                            Content Library
+                        </div>
+                        <div id="videosContainer" class="videos-grid">
+                            <div class="no-data">
+                                <i class="fas fa-sync-alt fa-spin"></i>
+                                <p>Loading content...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button id="changePasswordBtn" class="btn btn-secondary">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                        <button id="logoutBtn" class="btn btn-logout">
+                            <i class="fas fa-power-off"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div id="passwordModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="glass-card">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-shield-alt"></i> Update Security</h3>
+                        <button class="modal-close" id="closePasswordModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-content">
+                        <div id="passwordMessage" class="message"></div>
+                        
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <div class="input-container">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <div class="input-container">
+                                <i class="fas fa-key"></i>
+                                <input type="password" id="newPassword" placeholder="Min. 6 characters">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <div class="input-container">
+                                <i class="fas fa-check-circle"></i>
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        
+                        <button id="updatePasswordBtn" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Nexus Portal © 2024 | Secure. Fast. Futuristic.</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase Modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            updatePassword,
+            reauthenticateWithCredential,
+            EmailAuthProvider
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc,
+            getDoc,
+            updateDoc,
+            serverTimestamp,
+            collection,
+            getDocs,
+            query,
+            where,
+            orderBy,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        // Firebase Configuration (same as your original, but using a different database path)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJn31foXlB5ooSIdZ1aGcshMu955urDQo",
+            authDomain: "fouth-year.firebaseapp.com",
+            projectId: "fouth-year",
+            storageBucket: "fouth-year.firebasestorage.app",
+            messagingSenderId: "771603556892",
+            appId: "1:771603556892:web:51ae0bd68acf6678a14dd9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const elements = {
+            loading: {
+                overlay: document.getElementById('loadingOverlay'),
+                message: document.getElementById('loadingMessage'),
+                subtext: document.getElementById('loadingSubtext'),
+                step: document.getElementById('loadingStep'),
+                progress: document.getElementById('loadingProgress'),
+                timer: document.getElementById('loadingTimer')
+            },
+            login: {
+                section: document.getElementById('loginSection'),
+                email: document.getElementById('loginEmail'),
+                password: document.getElementById('loginPassword'),
+                btn: document.getElementById('loginBtn'),
+                message: document.getElementById('loginMessage')
+            },
+            dashboard: {
+                section: document.getElementById('dashboardSection'),
+                message: document.getElementById('dashboardMessage'),
+                userEmail: document.getElementById('userEmail'),
+                userRole: document.getElementById('userRoleDisplay'),
+                profileName: document.getElementById('profileName'),
+                profileEmail: document.getElementById('profileEmail'),
+                profilePhone: document.getElementById('profilePhone'),
+                profileRole: document.getElementById('profileRole'),
+                profileStatus: document.getElementById('profileStatus'),
+                profileCreated: document.getElementById('profileCreated')
+            },
+            devices: document.getElementById('devicesContainer'),
+            videos: document.getElementById('videosContainer'),
+            passwordModal: {
+                modal: document.getElementById('passwordModal'),
+                close: document.getElementById('closePasswordModal'),
+                current: document.getElementById('currentPassword'),
+                new: document.getElementById('newPassword'),
+                confirm: document.getElementById('confirmPassword'),
+                btn: document.getElementById('updatePasswordBtn'),
+                message: document.getElementById('passwordMessage')
+            },
+            logoutBtn: document.getElementById('logoutBtn'),
+            changePasswordBtn: document.getElementById('changePasswordBtn')
+        };
+
+        // State
+        let currentUser = null;
+        let userData = null;
+        let videoUnsubscribe = null;
+        let loadingStartTime = null;
+        let loadingInterval = null;
+
+        // Loading System
+        function showLoading(message = 'Initializing Nexus...', subtext = 'Preparing your experience') {
+            elements.loading.overlay.classList.remove('hidden');
+            elements.loading.message.textContent = message;
+            elements.loading.subtext.textContent = subtext;
+            loadingStartTime = Date.now();
+            
+            if (loadingInterval) clearInterval(loadingInterval);
+            loadingInterval = setInterval(updateLoadingTimer, 100);
+            
+            simulateLoadingSteps();
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                elements.loading.overlay.classList.add('hidden');
+                if (loadingInterval) {
+                    clearInterval(loadingInterval);
+                    loadingInterval = null;
+                }
+            }, 500);
+        }
+
+        function updateLoadingTimer() {
+            if (!loadingStartTime) return;
+            const elapsed = Math.floor((Date.now() - loadingStartTime) / 1000);
+            elements.loading.timer.textContent = `${elapsed}s`;
+        }
+
+        function simulateLoadingSteps() {
+            const steps = [
+                'Connecting to Nexus...',
+                'Verifying credentials...',
+                'Loading profile data...',
+                'Scanning devices...',
+                'Fetching content...',
+                'Ready to launch!'
+            ];
+            
+            let step = 1;
+            const interval = setInterval(() => {
+                if (step <= steps.length) {
+                    elements.loading.subtext.textContent = steps[step - 1];
+                    elements.loading.step.textContent = step;
+                    elements.loading.progress.textContent = Math.floor((step / steps.length) * 100) + '%';
+                    step++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        }
+
+        // Message Helper
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message message-${type}`;
+            element.style.display = 'flex';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Device Tracking
+        function generateDeviceId() {
+            const info = navigator.userAgent + navigator.language + navigator.platform;
+            let hash = 0;
+            for (let i = 0; i < info.length; i++) {
+                hash = ((hash << 5) - hash) + info.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return 'dev_' + Math.abs(hash).toString(36);
+        }
+
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            return {
+                name: /mobile/i.test(ua) ? 'Mobile' : /tablet/i.test(ua) ? 'Tablet' : 'Desktop',
+                browser: ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Unknown',
+                os: ua.includes('Windows') ? 'Windows' : ua.includes('Mac') ? 'macOS' : ua.includes('Linux') ? 'Linux' : ua.includes('Android') ? 'Android' : ua.includes('iOS') ? 'iOS' : 'Unknown'
+            };
+        }
+
+        async function trackDevice(userId) {
+            try {
+                const deviceId = generateDeviceId();
+                const device = getDeviceInfo();
+                
+                // Get IP and location (simplified)
+                let ip = 'Unknown', location = 'Unknown';
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipRes.json();
+                    ip = ipData.ip;
+                    
+                    const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                    const locData = await locRes.json();
+                    location = locData.city ? `${locData.city}, ${locData.country_name}` : 'Unknown';
+                } catch (e) {
+                    console.log('Location fetch failed');
+                }
+
+                const deviceInfo = {
+                    deviceId,
+                    deviceName: device.name,
+                    browser: device.browser,
+                    os: device.os,
+                    ip,
+                    location,
+                    lastLogin: new Date().toISOString(),
+                    isCurrent: true
+                };
+
+                const userRef = doc(db, 'nexus_users', userId); // Different collection name
+                const userDoc = await getDoc(userRef);
+                
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    let devices = data.devices || [];
+                    
+                    devices = devices.map(d => ({ ...d, isCurrent: false }));
+                    
+                    const existingIndex = devices.findIndex(d => d.deviceId === deviceId);
+                    if (existingIndex > -1) {
+                        devices[existingIndex] = deviceInfo;
+                    } else {
+                        if (devices.length >= 10) devices.shift();
+                        devices.push(deviceInfo);
+                    }
+                    
+                    await updateDoc(userRef, { devices });
+                }
+            } catch (error) {
+                console.error('Device tracking error:', error);
+            }
+        }
+
+        // Login Handler
+        async function handleLogin() {
+            const email = elements.login.email.value;
+            const password = elements.login.password.value;
+            
+            elements.login.message.style.display = 'none';
+            
+            if (!email || !password) {
+                showMessage(elements.login.message, 'Please enter both email and password', 'error');
+                return;
+            }
+
+            try {
+                showLoading('Authenticating', 'Connecting to Nexus...');
+                elements.login.btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Launching...';
+                elements.login.btn.disabled = true;
+
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Using different collection: 'nexus_users'
+                const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
+                
+                if (!userDoc.exists()) {
+                    await signOut(auth);
+                    hideLoading();
+                    showMessage(elements.login.message, 'User not found in Nexus database', 'error');
+                    return;
+                }
+
+                userData = userDoc.data();
+                
+                if (userData.status === 'blocked') {
+                    await signOut(auth);
+                    hideLoading();
+                    showMessage(elements.login.message, 'Account blocked. Contact admin.', 'error');
+                    return;
+                }
+
+                currentUser = {
+                    email: user.email,
+                    uid: user.uid,
+                    role: userData.role || 'user'
+                };
+
+                await trackDevice(user.uid);
+                localStorage.setItem('nexusUser', JSON.stringify(currentUser));
+
+                showMessage(elements.login.message, `Welcome to Nexus, ${userData.name || email}!`, 'success');
+                
+                setTimeout(() => {
+                    hideLoading();
+                    showDashboard();
+                    loadUserProfile();
+                    loadVideos();
+                    startVideoListener();
+                }, 1000);
+
+            } catch (error) {
+                hideLoading();
+                let errorMsg = 'Login failed';
+                if (error.code === 'auth/invalid-credential') errorMsg = 'Invalid email or password';
+                else if (error.code === 'auth/user-not-found') errorMsg = 'No account found';
+                else if (error.code === 'auth/wrong-password') errorMsg = 'Incorrect password';
+                else if (error.code === 'auth/too-many-requests') errorMsg = 'Too many attempts. Try later.';
+                
+                showMessage(elements.login.message, errorMsg, 'error');
+            } finally {
+                elements.login.btn.innerHTML = '<i class="fas fa-rocket"></i> Launch Portal';
+                elements.login.btn.disabled = false;
+            }
+        }
+
+        // Logout Handler
+        async function handleLogout() {
+            if (videoUnsubscribe) videoUnsubscribe();
+            
+            showLoading('Signing out', 'Closing Nexus connection...');
+            await signOut(auth);
+            localStorage.removeItem('nexusUser');
+            currentUser = null;
+            userData = null;
+            
+            setTimeout(() => {
+                hideLoading();
+                showLogin();
+                showMessage(elements.login.message, 'Successfully signed out', 'info');
+            }, 1000);
+        }
+
+        // Show Dashboard
+        function showDashboard() {
+            elements.login.section.classList.add('hidden');
+            elements.dashboard.section.classList.remove('hidden');
+        }
+
+        function showLogin() {
+            elements.login.section.classList.remove('hidden');
+            elements.dashboard.section.classList.add('hidden');
+            elements.login.email.value = '';
+            elements.login.password.value = '';
+        }
+
+        // Load User Profile
+        async function loadUserProfile() {
+            if (!currentUser || !userData) return;
+
+            try {
+                elements.dashboard.profileName.textContent = userData.name || 'Nexus User';
+                elements.dashboard.profileEmail.textContent = userData.email || currentUser.email;
+                elements.dashboard.profilePhone.textContent = userData.phone || 'Not provided';
+                elements.dashboard.userEmail.textContent = userData.email || currentUser.email;
+
+                const created = userData.createdAt?.toDate?.() || new Date();
+                elements.dashboard.profileCreated.textContent = created.toLocaleDateString();
+
+                const role = userData.role || 'user';
+                elements.dashboard.profileRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                elements.dashboard.profileRole.className = `role-badge role-${role}`;
+                
+                const status = userData.status || 'active';
+                elements.dashboard.profileStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                elements.dashboard.profileStatus.className = `status-badge status-${status}`;
+
+                const roleDisplay = role === 'admin' ? '(Admin)' : role === 'moderator' ? '(Mod)' : '(User)';
+                elements.dashboard.userRole.textContent = roleDisplay;
+                elements.dashboard.userRole.style.color = role === 'admin' ? 'var(--primary)' : role === 'moderator' ? 'var(--secondary)' : 'rgba(255,255,255,0.8)';
+
+                await loadDevices();
+            } catch (error) {
+                console.error('Profile load error:', error);
+            }
+        }
+
+        // Load Devices
+        async function loadDevices() {
+            if (!currentUser) return;
+
+            try {
+                const userRef = doc(db, 'nexus_users', currentUser.uid);
+                const userDoc = await getDoc(userRef);
+                const devices = userDoc.data()?.devices || [];
+
+                if (devices.length === 0) {
+                    elements.devices.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-wifi-slash"></i>
+                            <p>No devices connected</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                devices.sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin));
+                
+                let html = '';
+                devices.forEach(device => {
+                    html += `
+                        <div class="device-card">
+                            <div class="device-header">
+                                <div class="device-name">
+                                    <i class="fas fa-${device.os?.includes('Windows') ? 'desktop' : device.os?.includes('Android') || device.os?.includes('iOS') ? 'mobile-alt' : 'laptop'}"></i>
+                                    ${device.deviceName || 'Unknown Device'}
+                                    ${device.isCurrent ? '<span class="current-badge">Current</span>' : ''}
+                                </div>
+                                <div class="device-time">
+                                    ${new Date(device.lastLogin).toLocaleString()}
+                                </div>
+                            </div>
+                            <div class="device-details">
+                                <div class="device-detail"><i class="fas fa-globe"></i> ${device.browser || 'Unknown'}</div>
+                                <div class="device-detail"><i class="fas fa-cog"></i> ${device.os || 'Unknown'}</div>
+                                <div class="device-detail"><i class="fas fa-network-wired"></i> ${device.ip || 'Unknown'}</div>
+                                <div class="device-detail"><i class="fas fa-map-marker-alt"></i> ${device.location || 'Unknown'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                elements.devices.innerHTML = html;
+            } catch (error) {
+                console.error('Devices load error:', error);
+                elements.devices.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load devices</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load Videos (from 'nexus_videos' collection)
+        async function loadVideos() {
+            try {
+                const videosQuery = query(
+                    collection(db, 'nexus_videos'),
+                    where('status', '==', 'public'),
+                    orderBy('order', 'asc')
+                );
+                
+                const snapshot = await getDocs(videosQuery);
+                const videos = [];
+                
+                snapshot.forEach(doc => {
+                    videos.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderVideos(videos);
+            } catch (error) {
+                console.error('Videos load error:', error);
+                elements.videos.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load content</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Video Listener
+        function startVideoListener() {
+            if (videoUnsubscribe) videoUnsubscribe();
+            
+            try {
+                const videosQuery = query(
+                    collection(db, 'nexus_videos'),
+                    where('status', '==', 'public'),
+                    orderBy('order', 'asc')
+                );
+                
+                videoUnsubscribe = onSnapshot(videosQuery, (snapshot) => {
+                    const videos = [];
+                    snapshot.forEach(doc => {
+                        videos.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderVideos(videos);
+                }, error => {
+                    console.error('Video listener error:', error);
+                });
+            } catch (error) {
+                console.error('Listener setup error:', error);
+            }
+        }
+
+        // Render Videos
+        function renderVideos(videos) {
+            if (!videos || videos.length === 0) {
+                elements.videos.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-video-slash"></i>
+                        <p>No content available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            videos.forEach(video => {
+                const youtubeId = extractYouTubeId(video.embedCode);
+                const thumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : '';
+                const created = video.createdAt?.toDate?.() ? video.createdAt.toDate().toLocaleDateString() : 'N/A';
+
+                html += `
+                    <div class="video-card">
+                        <div class="video-thumbnail" onclick="window.open('v.html?videoId=${video.id}', '_blank')">
+                            ${thumbnail ? `<img src="${thumbnail}" alt="${video.title}">` : ''}
+                            <div class="play-overlay">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${video.title || 'Untitled'}</div>
+                            <div class="video-meta">
+                                <span><i class="fas fa-calendar"></i> ${created}</span>
+                                <span><i class="fas fa-eye"></i> ${video.views || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            elements.videos.innerHTML = html;
+        }
+
+        // YouTube ID Extractor
+        function extractYouTubeId(embedCode) {
+            if (!embedCode) return null;
+            const match = embedCode.match(/(?:youtube\.com\/embed\/|youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        // Change Password
+        async function handleChangePassword() {
+            const current = elements.passwordModal.current.value;
+            const newPass = elements.passwordModal.new.value;
+            const confirm = elements.passwordModal.confirm.value;
+
+            elements.passwordModal.message.style.display = 'none';
+
+            if (!current || !newPass || !confirm) {
+                showMessage(elements.passwordModal.message, 'All fields required', 'error');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                showMessage(elements.passwordModal.message, 'Password must be 6+ characters', 'error');
+                return;
+            }
+
+            if (newPass !== confirm) {
+                showMessage(elements.passwordModal.message, 'Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                showLoading('Updating', 'Securing your account...');
+                elements.passwordModal.btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                elements.passwordModal.btn.disabled = true;
+
+                const user = auth.currentUser;
+                const credential = EmailAuthProvider.credential(user.email, current);
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, newPass);
+
+                elements.passwordModal.current.value = '';
+                elements.passwordModal.new.value = '';
+                elements.passwordModal.confirm.value = '';
+
+                showMessage(elements.passwordModal.message, 'Password updated!', 'success');
+                
+                setTimeout(() => {
+                    elements.passwordModal.modal.classList.add('hidden');
+                    hideLoading();
+                    showMessage(elements.dashboard.message, 'Password changed successfully', 'success');
+                }, 1500);
+
+            } catch (error) {
+                hideLoading();
+                let errorMsg = 'Update failed';
+                if (error.code === 'auth/wrong-password') errorMsg = 'Current password incorrect';
+                else if (error.code === 'auth/weak-password') errorMsg = 'New password too weak';
+                else if (error.code === 'auth/requires-recent-login') errorMsg = 'Please login again';
+                
+                showMessage(elements.passwordModal.message, errorMsg, 'error');
+            } finally {
+                elements.passwordModal.btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
+                elements.passwordModal.btn.disabled = false;
+            }
+        }
+
+        // Session Check
+        async function checkSession() {
+            showLoading('Resuming', 'Checking session...');
+            
+            const saved = localStorage.getItem('nexusUser');
+            const user = auth.currentUser;
+
+            if (saved && user) {
+                try {
+                    const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
+                    
+                    if (userDoc.exists()) {
+                        userData = userDoc.data();
+                        
+                        if (userData.status === 'blocked') {
+                            await signOut(auth);
+                            localStorage.removeItem('nexusUser');
+                            hideLoading();
+                            showLogin();
+                            return;
+                        }
+
+                        currentUser = {
+                            email: user.email,
+                            uid: user.uid,
+                            role: userData.role
+                        };
+
+                        await trackDevice(user.uid);
+                        showDashboard();
+                        loadUserProfile();
+                        loadVideos();
+                        startVideoListener();
+                    }
+                } catch (e) {
+                    localStorage.removeItem('nexusUser');
+                }
+            }
+            
+            hideLoading();
+        }
+
+        // Event Listeners
+        function setupListeners() {
+            elements.login.btn.addEventListener('click', handleLogin);
+            elements.logoutBtn.addEventListener('click', handleLogout);
+            
+            elements.login.password.addEventListener('keypress', e => {
+                if (e.key === 'Enter') handleLogin();
+            });
+
+            elements.changePasswordBtn.addEventListener('click', () => {
+                elements.passwordModal.modal.classList.remove('hidden');
+                elements.passwordModal.current.value = '';
+                elements.passwordModal.new.value = '';
+                elements.passwordModal.confirm.value = '';
+                elements.passwordModal.message.style.display = 'none';
+            });
+
+            elements.passwordModal.close.addEventListener('click', () => {
+                elements.passwordModal.modal.classList.add('hidden');
+            });
+
+            elements.passwordModal.modal.addEventListener('click', e => {
+                if (e.target === elements.passwordModal.modal) {
+                    elements.passwordModal.modal.classList.add('hidden');
+                }
+            });
+
+            elements.passwordModal.btn.addEventListener('click', handleChangePassword);
+
+            elements.passwordModal.confirm.addEventListener('keypress', e => {
+                if (e.key === 'Enter') handleChangePassword();
+            });
+
+            onAuthStateChanged(auth, user => {
+                if (!user && !elements.login.section.classList.contains('hidden')) {
+                    // Already on login page, ignore
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupListeners();
+            checkSession();
+        });
+
+        // Make functions available globally for onclick handlers
+        window.openVideo = (videoId) => {
+            window.open(`v.html?videoId=${videoId}`, '_blank');
+        };
+    </script>
+</body>
+</html>
