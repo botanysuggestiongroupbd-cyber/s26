@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fourth Year Course</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow-x: hidden;
+      font-family: Arial, sans-serif;
+    }
+    
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      font-size: 18px;
+    }
+    
+    #auth-message {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.98);
+      color: white;
+      z-index: 1001;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    #auth-message.show {
+      display: flex;
+      opacity: 1;
+    }
+    
+    #auth-message h2 {
+      color: #ff4444;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+    
+    #auth-message p {
+      margin-bottom: 30px;
+      font-size: 18px;
+      max-width: 500px;
+      line-height: 1.6;
+    }
+    
+    #login-btn, #back-btn {
+      padding: 14px 28px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    #login-btn:hover, #back-btn:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+    }
+    
+    #back-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #28a745;
+      z-index: 999;
+      padding: 12px 24px;
+      display: none;
+    }
+    
+    #back-btn:hover {
+      background: #218838;
+    }
+    
+    #player {
+      max-width: 100%;
+      margin: 0 auto;
+      background: #000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    #player.show {
+      display: block;
+      opacity: 1;
+    }
+    
+    /* Plyr কাস্টম স্টাইল - ফুলস্ক্রিনে কন্ট্রোলার হাইড করার জন্য */
+    .plyr--fullscreen .plyr__controls {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .plyr--fullscreen .plyr__controls.plyr__controls--visible {
+      opacity: 1;
+    }
+    
+    .plyr--fullscreen-active {
+      background: #000;
+    }
+    
+    /* Smooth transitions */
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    .fade-out {
+      animation: fadeOut 0.3s ease forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    /* মোবাইল ডিভাইসের জন্য বিশেষ স্টাইল */
+    @media (max-width: 768px) {
+      #player {
+        width: 100vw;
+        height: 100vh;
+      }
+      
+      .plyr {
+        --plyr-color-main: #f00;
+      }
+      
+      /* মোবাইলে কন্ট্রোলার বড় করুন */
+      .plyr__controls {
+        padding: 10px !important;
+      }
+      
+      .plyr__control {
+        width: 40px !important;
+        height: 40px !important;
+      }
+      
+      .plyr__time {
+        font-size: 14px !important;
+      }
+      
+      #auth-message {
+        padding: 15px;
+      }
+      
+      #auth-message h2 {
+        font-size: 24px;
+      }
+      
+      #auth-message p {
+        font-size: 16px;
+      }
+      
+      #login-btn, #back-btn {
+        padding: 12px 24px;
+        font-size: 15px;
+      }
+      
+      #back-btn {
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 300px;
+      }
+    }
+    
+    /* ডেস্কটপের জন্য */
+    @media (min-width: 769px) {
+      #back-btn {
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div style="text-align: center;">
+      <div style="margin-bottom: 20px; font-size: 24px;">Loading...</div>
+      <div style="width: 50px; height: 50px; border: 3px solid #333; border-top: 3px solid #007bff; border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite;"></div>
+    </div>
+  </div>
+  
+  <!-- Authentication Message -->
+  <div id="auth-message">
+    <h2>Welcome to Fourth Year Course</h2>
+    <p>Please login with your Google account to access the video content.</p>
+    <button id="login-btn">Login with Google</button>
+  </div>
+  
+  <!-- Back Button -->
+  <button id="back-btn">Back to Home</button>
+  
+  <!-- Video Player -->
+  <div id="player" data-plyr-provider="youtube" data-plyr-embed-id=""></div>
+
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+  <script type="module">
+    // Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged, 
+      signOut,
+      GoogleAuthProvider,
+      signInWithPopup 
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJn31foXlB5ooSIdZ1aGcshMu955urDQo",
+      authDomain: "fouth-year.firebaseapp.com",
+      projectId: "fouth-year",
+      storageBucket: "fouth-year.firebasestorage.app",
+      messagingSenderId: "771603556892",
+      appId: "1:771603556892:web:51ae0bd68acf6678a14dd9",
+      measurementId: "G-XWWT64FGJR"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // DOM elements
+    const loadingScreen = document.getElementById('loading-screen');
+    const authMessage = document.getElementById('auth-message');
+    const playerElement = document.getElementById('player');
+    const loginBtn = document.getElementById('login-btn');
+    const backBtn = document.getElementById('back-btn');
+
+    // Get Firestore video ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const firestoreVideoId = urlParams.get('videoId');
+    
+    // Function to extract YouTube ID
+    function extractYouTubeId(embedCode) {
+      if (!embedCode) return null;
+      const match = embedCode.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/) ||
+                   embedCode.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) ||
+                   embedCode.match(/v=([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
+    }
+    
+    // Function to check if device is mobile
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
+    // Show/Hide loading screen
+    function showLoading() {
+      loadingScreen.style.display = 'flex';
+    }
+    
+    function hideLoading() {
+      loadingScreen.style.display = 'none';
+    }
+    
+    // Show auth message with smooth transition
+    function showAuthMessage() {
+      hideLoading();
+      setTimeout(() => {
+        authMessage.classList.add('show');
+      }, 100);
+    }
+    
+    // Show video player with smooth transition
+    function showVideoPlayer() {
+      hideLoading();
+      setTimeout(() => {
+        playerElement.classList.add('show');
+        backBtn.style.display = 'block';
+      }, 100);
+    }
+    
+    // Login function
+    async function login() {
+      try {
+        showLoading();
+        await signInWithPopup(auth, provider);
+        console.log("Login successful");
+      } catch (error) {
+        console.error("Login error:", error);
+        hideLoading();
+        authMessage.classList.add('show');
+        alert("Login failed: " + error.message);
+      }
+    }
+    
+    // Back button function
+    function goToHome() {
+      window.location.href = 'index.html';
+    }
+    
+    // Load video from Firestore
+    async function loadVideo() {
+      if (!firestoreVideoId) {
+        console.error('No video ID');
+        alert('No video specified');
+        return;
+      }
+      
+      try {
+        const videoRef = doc(db, 'videos', firestoreVideoId);
+        const videoDoc = await getDoc(videoRef);
+        
+        if (!videoDoc.exists()) {
+          console.error('Video not found');
+          alert('Video not found');
+          return;
+        }
+        
+        const videoData = videoDoc.data();
+        const youtubeId = extractYouTubeId(videoData.embedCode);
+        
+        if (!youtubeId) {
+          console.error('Invalid video');
+          alert('Invalid video URL format');
+          return;
+        }
+        
+        // Set YouTube ID to player
+        playerElement.setAttribute('data-plyr-embed-id', youtubeId);
+        
+        // Initialize Plyr player with autohide controls
+        const player = new Plyr('#player', {
+          fullscreen: {
+            enabled: true,
+            fallback: true,
+            iosNative: true
+          },
+          controls: [
+            'play-large',
+            'play',
+            'progress',
+            'current-time',
+            'duration',
+            'mute',
+            'volume',
+            'captions',
+            'settings',
+            'pip',
+            'airplay',
+            'fullscreen'
+          ],
+          settings: ['captions', 'quality', 'speed'],
+          hideControls: true,
+          keyboard: { focused: true, global: true },
+          tooltips: { controls: true, seek: true },
+          autoplay: false,
+          clickToPlay: true,
+          disableContextMenu: false,
+          invertTime: true,
+          volume: 1,
+          muted: false,
+          storage: { enabled: true, key: 'plyr' },
+          loop: { active: false }
+        });
+        
+        // কাস্টম কন্ট্রোলার হাইড/শো লজিক
+        let hideControlsTimeout;
+        let controlsVisible = false;
+        
+        function showControls() {
+          if (!player.fullscreen.active) return;
+          
+          const controls = player.elements.controls;
+          if (controls) {
+            controls.classList.add('plyr__controls--visible');
+            controlsVisible = true;
+            
+            // 3 সেকেন্ড পর আবার হাইড করুন
+            clearTimeout(hideControlsTimeout);
+            hideControlsTimeout = setTimeout(() => {
+              hideControls();
+            }, 3000);
+          }
+        }
+        
+        function hideControls() {
+          if (!player.fullscreen.active) return;
+          
+          const controls = player.elements.controls;
+          if (controls && controlsVisible) {
+            controls.classList.remove('plyr__controls--visible');
+            controlsVisible = false;
+          }
+        }
+        
+        // ফুলস্ক্রিনে এন্ট্রি করলে কন্ট্রোলার হাইড করুন
+        player.on('enterfullscreen', event => {
+          setTimeout(() => {
+            hideControls();
+          }, 500);
+          
+          if (isMobileDevice()) {
+            try {
+              if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(e => {
+                  console.log('Orientation lock failed:', e);
+                });
+              }
+            } catch (e) {
+              console.log('Fullscreen landscape error:', e);
+            }
+          }
+        });
+        
+        // ফুলস্ক্রিন থেকে বের হলে কন্ট্রোলার দেখান
+        player.on('exitfullscreen', event => {
+          showControls();
+          
+          try {
+            if (screen.orientation && screen.orientation.unlock) {
+              screen.orientation.unlock();
+            }
+          } catch (e) {
+            console.log('Orientation unlock error:', e);
+          }
+        });
+        
+        // প্লেয়ারে ক্লিক/ট্যাপ করলে কন্ট্রোলার দেখান
+        player.elements.container.addEventListener('click', () => {
+          if (player.fullscreen.active) {
+            showControls();
+          }
+        });
+        
+        // মাউস মুভ করলেও কন্ট্রোলার দেখান
+        player.elements.container.addEventListener('mousemove', () => {
+          if (player.fullscreen.active) {
+            showControls();
+          }
+        });
+        
+        // টাচ মুভ করলেও কন্ট্রোলার দেখান (মোবাইলের জন্য)
+        player.elements.container.addEventListener('touchmove', () => {
+          if (player.fullscreen.active) {
+            showControls();
+          }
+        });
+        
+        // ভিডিও প্লে/পজ করলেও কন্ট্রোলার দেখান
+        player.on('play', () => {
+          if (player.fullscreen.active) {
+            showControls();
+          }
+        });
+        
+        player.on('pause', () => {
+          if (player.fullscreen.active) {
+            showControls();
+          }
+        });
+        
+        // মোবাইল ডিভাইসে orientation change হ্যান্ডলিং
+        window.addEventListener('orientationchange', () => {
+          if (isMobileDevice() && player.fullscreen.active) {
+            setTimeout(() => {
+              if (Math.abs(window.orientation) === 90) {
+                player.elements.container.style.transform = 'rotate(0deg)';
+              }
+            }, 300);
+          }
+        });
+        
+        console.log('Video loaded successfully');
+        
+        // Show video player after loading
+        setTimeout(showVideoPlayer, 300);
+        
+      } catch (error) {
+        console.error('Error loading video:', error);
+        alert('Error loading video. Please try again.');
+        hideLoading();
+      }
+    }
+
+    // Check authentication state
+    let authChecked = false;
+    
+    onAuthStateChanged(auth, (user) => {
+      if (authChecked) return;
+      authChecked = true;
+      
+      if (user) {
+        console.log("User logged in:", user.email);
+        authMessage.classList.remove('show');
+        loadVideo();
+      } else {
+        console.log("User not logged in");
+        showAuthMessage();
+        
+        if (playerElement.hasAttribute('data-plyr-embed-id')) {
+          playerElement.removeAttribute('data-plyr-embed-id');
+        }
+      }
+    });
+
+    // Event listeners
+    loginBtn.addEventListener('click', login);
+    backBtn.addEventListener('click', goToHome);
+
+    // Resize handler for better mobile experience
+    window.addEventListener('resize', () => {
+      const player = document.querySelector('.plyr');
+      if (player && isMobileDevice()) {
+        if (window.innerHeight > window.innerWidth) {
+          player.style.maxHeight = '80vh';
+        } else {
+          player.style.maxHeight = '100vh';
+        }
+      }
+    });
+    
+    // CSS for spinner animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+  </script>
+</body>
+</html>
