@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nexus Login | Modern User Portal</title>
+    <title>Nexus Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -39,7 +40,6 @@
         }
 
         body {
-            font-family: 'Space Grotesk', sans-serif;
             background: var(--gradient-1);
             min-height: 100vh;
             display: flex;
@@ -320,6 +320,13 @@
             gap: 10px;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
         .user-chip {
             display: flex;
             align-items: center;
@@ -359,6 +366,26 @@
             border-radius: 12px;
         }
 
+        .logout-btn-header {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn-header:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
         .dashboard-content {
             padding: 30px;
             display: flex;
@@ -368,7 +395,8 @@
 
         /* Section Styles */
         .section {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 25px;
         }
@@ -999,7 +1027,7 @@
             </div>
         </div>
 
-        <!-- Dashboard Section -->
+        <!-- Dashboard Section (লগইন করার পর) -->
         <div id="dashboardSection" class="hidden">
             <div class="glass-card">
                 <div class="dashboard-header">
@@ -1007,14 +1035,19 @@
                         <i class="fas fa-tachometer-alt"></i>
                         User Dashboard
                     </h2>
-                    <div class="user-chip">
-                        <div class="user-avatar">
-                            <i class="fas fa-user-astronaut"></i>
+                    <div class="header-right">
+                        <div class="user-chip">
+                            <div class="user-avatar">
+                                <i class="fas fa-user-astronaut"></i>
+                            </div>
+                            <div class="user-info-text">
+                                <div class="user-email" id="userEmail">user@nexus.com</div>
+                                <div class="user-role" id="userRoleDisplay">User</div>
+                            </div>
                         </div>
-                        <div class="user-info-text">
-                            <div class="user-email" id="userEmail">user@nexus.com</div>
-                            <div class="user-role" id="userRoleDisplay">User</div>
-                        </div>
+                        <button id="logoutBtnHeader" class="logout-btn-header">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
                     </div>
                 </div>
                 
@@ -1063,7 +1096,7 @@
                         </div>
                     </div>
 
-                    <!-- Devices Section -->
+                    <!-- Devices Section (যদি ইচ্ছা থাকে) -->
                     <div class="section">
                         <div class="section-title">
                             <i class="fas fa-laptop-code"></i>
@@ -1091,13 +1124,10 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- নিচের অ্যাকশন বাটন (শুধু Change Password) -->
                     <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button id="changePasswordBtn" class="btn btn-secondary">
                             <i class="fas fa-key"></i> Change Password
-                        </button>
-                        <button id="logoutBtn" class="btn btn-logout">
-                            <i class="fas fa-power-off"></i> Sign Out
                         </button>
                     </div>
                 </div>
@@ -1156,7 +1186,6 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        // Firebase Modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
         import { 
             getAuth, 
@@ -1175,13 +1204,9 @@
             serverTimestamp,
             collection,
             getDocs,
-            query,
-            where,
-            orderBy,
             onSnapshot
         } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-        // Firebase Configuration (same as your original, but using a different database path)
         const firebaseConfig = {
             apiKey: "AIzaSyAJn31foXlB5ooSIdZ1aGcshMu955urDQo",
             authDomain: "fouth-year.firebaseapp.com",
@@ -1191,78 +1216,63 @@
             appId: "1:771603556892:web:51ae0bd68acf6678a14dd9"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         // DOM Elements
-        const elements = {
-            loading: {
-                overlay: document.getElementById('loadingOverlay'),
-                message: document.getElementById('loadingMessage'),
-                subtext: document.getElementById('loadingSubtext'),
-                step: document.getElementById('loadingStep'),
-                progress: document.getElementById('loadingProgress'),
-                timer: document.getElementById('loadingTimer')
-            },
-            login: {
-                section: document.getElementById('loginSection'),
-                email: document.getElementById('loginEmail'),
-                password: document.getElementById('loginPassword'),
-                btn: document.getElementById('loginBtn'),
-                message: document.getElementById('loginMessage')
-            },
-            dashboard: {
-                section: document.getElementById('dashboardSection'),
-                message: document.getElementById('dashboardMessage'),
-                userEmail: document.getElementById('userEmail'),
-                userRole: document.getElementById('userRoleDisplay'),
-                profileName: document.getElementById('profileName'),
-                profileEmail: document.getElementById('profileEmail'),
-                profilePhone: document.getElementById('profilePhone'),
-                profileRole: document.getElementById('profileRole'),
-                profileStatus: document.getElementById('profileStatus'),
-                profileCreated: document.getElementById('profileCreated')
-            },
-            devices: document.getElementById('devicesContainer'),
-            videos: document.getElementById('videosContainer'),
-            passwordModal: {
-                modal: document.getElementById('passwordModal'),
-                close: document.getElementById('closePasswordModal'),
-                current: document.getElementById('currentPassword'),
-                new: document.getElementById('newPassword'),
-                confirm: document.getElementById('confirmPassword'),
-                btn: document.getElementById('updatePasswordBtn'),
-                message: document.getElementById('passwordMessage')
-            },
-            logoutBtn: document.getElementById('logoutBtn'),
-            changePasswordBtn: document.getElementById('changePasswordBtn')
-        };
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+        const loadingStep = document.getElementById('loadingStep');
+        const loadingProgress = document.getElementById('loadingProgress');
+        const loadingTimer = document.getElementById('loadingTimer');
 
-        // State
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtnHeader = document.getElementById('logoutBtnHeader'); // হেডারের Logout
+        const loginMessage = document.getElementById('loginMessage');
+        const dashboardMessage = document.getElementById('dashboardMessage');
+        const userEmail = document.getElementById('userEmail');
+        const userRoleDisplay = document.getElementById('userRoleDisplay');
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const profilePhone = document.getElementById('profilePhone');
+        const profileRole = document.getElementById('profileRole');
+        const profileStatus = document.getElementById('profileStatus');
+        const profileCreated = document.getElementById('profileCreated');
+        const devicesContainer = document.getElementById('devicesContainer');
+        const videosContainer = document.getElementById('videosContainer');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const passwordModal = document.getElementById('passwordModal');
+        const closePasswordModal = document.getElementById('closePasswordModal');
+        const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+        const passwordMessage = document.getElementById('passwordMessage');
+        const currentPassword = document.getElementById('currentPassword');
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+
         let currentUser = null;
         let userData = null;
         let videoUnsubscribe = null;
         let loadingStartTime = null;
         let loadingInterval = null;
 
-        // Loading System
+        // Loading functions
         function showLoading(message = 'Initializing Nexus...', subtext = 'Preparing your experience') {
-            elements.loading.overlay.classList.remove('hidden');
-            elements.loading.message.textContent = message;
-            elements.loading.subtext.textContent = subtext;
+            loadingOverlay.classList.remove('hidden');
+            loadingMessage.textContent = message;
+            loadingSubtext.textContent = subtext;
             loadingStartTime = Date.now();
-            
             if (loadingInterval) clearInterval(loadingInterval);
             loadingInterval = setInterval(updateLoadingTimer, 100);
-            
             simulateLoadingSteps();
         }
 
         function hideLoading() {
             setTimeout(() => {
-                elements.loading.overlay.classList.add('hidden');
+                loadingOverlay.classList.add('hidden');
                 if (loadingInterval) {
                     clearInterval(loadingInterval);
                     loadingInterval = null;
@@ -1273,7 +1283,7 @@
         function updateLoadingTimer() {
             if (!loadingStartTime) return;
             const elapsed = Math.floor((Date.now() - loadingStartTime) / 1000);
-            elements.loading.timer.textContent = `${elapsed}s`;
+            loadingTimer.textContent = `${elapsed}s`;
         }
 
         function simulateLoadingSteps() {
@@ -1285,13 +1295,12 @@
                 'Fetching content...',
                 'Ready to launch!'
             ];
-            
             let step = 1;
             const interval = setInterval(() => {
                 if (step <= steps.length) {
-                    elements.loading.subtext.textContent = steps[step - 1];
-                    elements.loading.step.textContent = step;
-                    elements.loading.progress.textContent = Math.floor((step / steps.length) * 100) + '%';
+                    loadingSubtext.textContent = steps[step - 1];
+                    loadingStep.textContent = step;
+                    loadingProgress.textContent = Math.floor((step / steps.length) * 100) + '%';
                     step++;
                 } else {
                     clearInterval(interval);
@@ -1299,12 +1308,10 @@
             }, 800);
         }
 
-        // Message Helper
         function showMessage(element, message, type) {
             element.textContent = message;
             element.className = `message message-${type}`;
             element.style.display = 'flex';
-            
             if (type === 'success') {
                 setTimeout(() => {
                     element.style.display = 'none';
@@ -1312,7 +1319,7 @@
             }
         }
 
-        // Device Tracking
+        // Device Tracking Functions (simplified for demo)
         function generateDeviceId() {
             const info = navigator.userAgent + navigator.language + navigator.platform;
             let hash = 0;
@@ -1336,20 +1343,15 @@
             try {
                 const deviceId = generateDeviceId();
                 const device = getDeviceInfo();
-                
-                // Get IP and location (simplified)
                 let ip = 'Unknown', location = 'Unknown';
                 try {
                     const ipRes = await fetch('https://api.ipify.org?format=json');
                     const ipData = await ipRes.json();
                     ip = ipData.ip;
-                    
                     const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
                     const locData = await locRes.json();
                     location = locData.city ? `${locData.city}, ${locData.country_name}` : 'Unknown';
-                } catch (e) {
-                    console.log('Location fetch failed');
-                }
+                } catch (e) {}
 
                 const deviceInfo = {
                     deviceId,
@@ -1362,15 +1364,12 @@
                     isCurrent: true
                 };
 
-                const userRef = doc(db, 'nexus_users', userId); // Different collection name
+                const userRef = doc(db, 'nexus_users', userId);
                 const userDoc = await getDoc(userRef);
-                
                 if (userDoc.exists()) {
                     const data = userDoc.data();
                     let devices = data.devices || [];
-                    
                     devices = devices.map(d => ({ ...d, isCurrent: false }));
-                    
                     const existingIndex = devices.findIndex(d => d.deviceId === deviceId);
                     if (existingIndex > -1) {
                         devices[existingIndex] = deviceInfo;
@@ -1378,7 +1377,6 @@
                         if (devices.length >= 10) devices.shift();
                         devices.push(deviceInfo);
                     }
-                    
                     await updateDoc(userRef, { devices });
                 }
             } catch (error) {
@@ -1388,40 +1386,34 @@
 
         // Login Handler
         async function handleLogin() {
-            const email = elements.login.email.value;
-            const password = elements.login.password.value;
-            
-            elements.login.message.style.display = 'none';
-            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            loginMessage.style.display = 'none';
             if (!email || !password) {
-                showMessage(elements.login.message, 'Please enter both email and password', 'error');
+                showMessage(loginMessage, 'Please enter both email and password', 'error');
                 return;
             }
-
             try {
                 showLoading('Authenticating', 'Connecting to Nexus...');
-                elements.login.btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Launching...';
-                elements.login.btn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Launching...';
+                loginBtn.disabled = true;
 
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Using different collection: 'nexus_users'
                 const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
-                
                 if (!userDoc.exists()) {
                     await signOut(auth);
                     hideLoading();
-                    showMessage(elements.login.message, 'User not found in Nexus database', 'error');
+                    showMessage(loginMessage, 'User not found in Nexus database', 'error');
                     return;
                 }
 
                 userData = userDoc.data();
-                
                 if (userData.status === 'blocked') {
                     await signOut(auth);
                     hideLoading();
-                    showMessage(elements.login.message, 'Account blocked. Contact admin.', 'error');
+                    showMessage(loginMessage, 'Account blocked. Contact admin.', 'error');
                     return;
                 }
 
@@ -1434,7 +1426,7 @@
                 await trackDevice(user.uid);
                 localStorage.setItem('nexusUser', JSON.stringify(currentUser));
 
-                showMessage(elements.login.message, `Welcome to Nexus, ${userData.name || email}!`, 'success');
+                showMessage(loginMessage, `Welcome to Nexus, ${userData.name || email}!`, 'success');
                 
                 setTimeout(() => {
                     hideLoading();
@@ -1451,68 +1443,63 @@
                 else if (error.code === 'auth/user-not-found') errorMsg = 'No account found';
                 else if (error.code === 'auth/wrong-password') errorMsg = 'Incorrect password';
                 else if (error.code === 'auth/too-many-requests') errorMsg = 'Too many attempts. Try later.';
-                
-                showMessage(elements.login.message, errorMsg, 'error');
+                showMessage(loginMessage, errorMsg, 'error');
             } finally {
-                elements.login.btn.innerHTML = '<i class="fas fa-rocket"></i> Launch Portal';
-                elements.login.btn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-rocket"></i> Launch Portal';
+                loginBtn.disabled = false;
             }
         }
 
         // Logout Handler
         async function handleLogout() {
             if (videoUnsubscribe) videoUnsubscribe();
-            
             showLoading('Signing out', 'Closing Nexus connection...');
             await signOut(auth);
             localStorage.removeItem('nexusUser');
             currentUser = null;
             userData = null;
-            
             setTimeout(() => {
                 hideLoading();
                 showLogin();
-                showMessage(elements.login.message, 'Successfully signed out', 'info');
+                showMessage(loginMessage, 'Successfully signed out', 'info');
             }, 1000);
         }
 
-        // Show Dashboard
         function showDashboard() {
-            elements.login.section.classList.add('hidden');
-            elements.dashboard.section.classList.remove('hidden');
+            loginSection.classList.add('hidden');
+            dashboardSection.classList.remove('hidden');
         }
 
         function showLogin() {
-            elements.login.section.classList.remove('hidden');
-            elements.dashboard.section.classList.add('hidden');
-            elements.login.email.value = '';
-            elements.login.password.value = '';
+            loginSection.classList.remove('hidden');
+            dashboardSection.classList.add('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
         }
 
         // Load User Profile
         async function loadUserProfile() {
             if (!currentUser || !userData) return;
-
             try {
-                elements.dashboard.profileName.textContent = userData.name || 'Nexus User';
-                elements.dashboard.profileEmail.textContent = userData.email || currentUser.email;
-                elements.dashboard.profilePhone.textContent = userData.phone || 'Not provided';
-                elements.dashboard.userEmail.textContent = userData.email || currentUser.email;
+                profileName.textContent = userData.name || 'Nexus User';
+                profileEmail.textContent = userData.email || currentUser.email;
+                profilePhone.textContent = userData.phone || 'Not provided';
+                userEmail.textContent = userData.email || currentUser.email;
 
                 const created = userData.createdAt?.toDate?.() || new Date();
-                elements.dashboard.profileCreated.textContent = created.toLocaleDateString();
+                profileCreated.textContent = created.toLocaleDateString();
 
                 const role = userData.role || 'user';
-                elements.dashboard.profileRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-                elements.dashboard.profileRole.className = `role-badge role-${role}`;
+                profileRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                profileRole.className = `role-badge role-${role}`;
                 
                 const status = userData.status || 'active';
-                elements.dashboard.profileStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                elements.dashboard.profileStatus.className = `status-badge status-${status}`;
+                profileStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                profileStatus.className = `status-badge status-${status}`;
 
                 const roleDisplay = role === 'admin' ? '(Admin)' : role === 'moderator' ? '(Mod)' : '(User)';
-                elements.dashboard.userRole.textContent = roleDisplay;
-                elements.dashboard.userRole.style.color = role === 'admin' ? 'var(--primary)' : role === 'moderator' ? 'var(--secondary)' : 'rgba(255,255,255,0.8)';
+                userRoleDisplay.textContent = roleDisplay;
+                userRoleDisplay.style.color = role === 'admin' ? 'var(--primary)' : role === 'moderator' ? 'var(--secondary)' : 'rgba(255,255,255,0.8)';
 
                 await loadDevices();
             } catch (error) {
@@ -1523,14 +1510,13 @@
         // Load Devices
         async function loadDevices() {
             if (!currentUser) return;
-
             try {
                 const userRef = doc(db, 'nexus_users', currentUser.uid);
                 const userDoc = await getDoc(userRef);
                 const devices = userDoc.data()?.devices || [];
 
                 if (devices.length === 0) {
-                    elements.devices.innerHTML = `
+                    devicesContainer.innerHTML = `
                         <div class="no-data">
                             <i class="fas fa-wifi-slash"></i>
                             <p>No devices connected</p>
@@ -1540,7 +1526,6 @@
                 }
 
                 devices.sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin));
-                
                 let html = '';
                 devices.forEach(device => {
                     html += `
@@ -1564,11 +1549,10 @@
                         </div>
                     `;
                 });
-
-                elements.devices.innerHTML = html;
+                devicesContainer.innerHTML = html;
             } catch (error) {
                 console.error('Devices load error:', error);
-                elements.devices.innerHTML = `
+                devicesContainer.innerHTML = `
                     <div class="no-data">
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>Failed to load devices</p>
@@ -1577,63 +1561,45 @@
             }
         }
 
-        // Load Videos (from 'nexus_videos' collection)
+        // Load Videos from 'nexus_videos' (public only)
         async function loadVideos() {
             try {
-                const videosQuery = query(
-                    collection(db, 'nexus_videos'),
-                    where('status', '==', 'public'),
-                    orderBy('order', 'asc')
-                );
-                
-                const snapshot = await getDocs(videosQuery);
-                const videos = [];
-                
+                const snapshot = await getDocs(collection(db, 'nexus_videos'));
+                const allVideos = [];
                 snapshot.forEach(doc => {
-                    videos.push({ id: doc.id, ...doc.data() });
+                    allVideos.push({ id: doc.id, ...doc.data() });
                 });
-
-                renderVideos(videos);
+                const publicVideos = allVideos
+                    .filter(v => v.status === 'public')
+                    .sort((a, b) => (a.order || 999) - (b.order || 999));
+                renderVideos(publicVideos);
             } catch (error) {
-                console.error('Videos load error:', error);
-                elements.videos.innerHTML = `
-                    <div class="no-data">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>Failed to load content</p>
-                    </div>
-                `;
+                console.error('Error loading videos:', error);
+                videosContainer.innerHTML = `<div class="no-data"><i class="fas fa-exclamation-triangle"></i><p>Failed to load videos. ${error.message}</p></div>`;
             }
         }
 
-        // Video Listener
+        // Start realtime updates
         function startVideoListener() {
             if (videoUnsubscribe) videoUnsubscribe();
-            
-            try {
-                const videosQuery = query(
-                    collection(db, 'nexus_videos'),
-                    where('status', '==', 'public'),
-                    orderBy('order', 'asc')
-                );
-                
-                videoUnsubscribe = onSnapshot(videosQuery, (snapshot) => {
-                    const videos = [];
-                    snapshot.forEach(doc => {
-                        videos.push({ id: doc.id, ...doc.data() });
-                    });
-                    renderVideos(videos);
-                }, error => {
-                    console.error('Video listener error:', error);
+            videoUnsubscribe = onSnapshot(collection(db, 'nexus_videos'), (snapshot) => {
+                const allVideos = [];
+                snapshot.forEach(doc => {
+                    allVideos.push({ id: doc.id, ...doc.data() });
                 });
-            } catch (error) {
-                console.error('Listener setup error:', error);
-            }
+                const publicVideos = allVideos
+                    .filter(v => v.status === 'public')
+                    .sort((a, b) => (a.order || 999) - (b.order || 999));
+                renderVideos(publicVideos);
+            }, (error) => {
+                console.error('Video listener error:', error);
+            });
         }
 
         // Render Videos
         function renderVideos(videos) {
             if (!videos || videos.length === 0) {
-                elements.videos.innerHTML = `
+                videosContainer.innerHTML = `
                     <div class="no-data">
                         <i class="fas fa-video-slash"></i>
                         <p>No content available</p>
@@ -1641,13 +1607,11 @@
                 `;
                 return;
             }
-
             let html = '';
             videos.forEach(video => {
                 const youtubeId = extractYouTubeId(video.embedCode);
                 const thumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : '';
                 const created = video.createdAt?.toDate?.() ? video.createdAt.toDate().toLocaleDateString() : 'N/A';
-
                 html += `
                     <div class="video-card">
                         <div class="video-thumbnail" onclick="window.open('v.html?videoId=${video.id}', '_blank')">
@@ -1666,8 +1630,7 @@
                     </div>
                 `;
             });
-
-            elements.videos.innerHTML = html;
+            videosContainer.innerHTML = html;
         }
 
         // YouTube ID Extractor
@@ -1679,77 +1642,62 @@
 
         // Change Password
         async function handleChangePassword() {
-            const current = elements.passwordModal.current.value;
-            const newPass = elements.passwordModal.new.value;
-            const confirm = elements.passwordModal.confirm.value;
-
-            elements.passwordModal.message.style.display = 'none';
-
+            const current = currentPassword.value;
+            const newPass = newPassword.value;
+            const confirm = confirmPassword.value;
+            passwordMessage.style.display = 'none';
             if (!current || !newPass || !confirm) {
-                showMessage(elements.passwordModal.message, 'All fields required', 'error');
+                showMessage(passwordMessage, 'All fields required', 'error');
                 return;
             }
-
             if (newPass.length < 6) {
-                showMessage(elements.passwordModal.message, 'Password must be 6+ characters', 'error');
+                showMessage(passwordMessage, 'Password must be 6+ characters', 'error');
                 return;
             }
-
             if (newPass !== confirm) {
-                showMessage(elements.passwordModal.message, 'Passwords do not match', 'error');
+                showMessage(passwordMessage, 'Passwords do not match', 'error');
                 return;
             }
-
             try {
                 showLoading('Updating', 'Securing your account...');
-                elements.passwordModal.btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-                elements.passwordModal.btn.disabled = true;
-
+                updatePasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                updatePasswordBtn.disabled = true;
                 const user = auth.currentUser;
                 const credential = EmailAuthProvider.credential(user.email, current);
                 await reauthenticateWithCredential(user, credential);
                 await updatePassword(user, newPass);
-
-                elements.passwordModal.current.value = '';
-                elements.passwordModal.new.value = '';
-                elements.passwordModal.confirm.value = '';
-
-                showMessage(elements.passwordModal.message, 'Password updated!', 'success');
-                
+                currentPassword.value = '';
+                newPassword.value = '';
+                confirmPassword.value = '';
+                showMessage(passwordMessage, 'Password updated!', 'success');
                 setTimeout(() => {
-                    elements.passwordModal.modal.classList.add('hidden');
+                    passwordModal.classList.add('hidden');
                     hideLoading();
-                    showMessage(elements.dashboard.message, 'Password changed successfully', 'success');
+                    showMessage(dashboardMessage, 'Password changed successfully', 'success');
                 }, 1500);
-
             } catch (error) {
                 hideLoading();
                 let errorMsg = 'Update failed';
                 if (error.code === 'auth/wrong-password') errorMsg = 'Current password incorrect';
                 else if (error.code === 'auth/weak-password') errorMsg = 'New password too weak';
                 else if (error.code === 'auth/requires-recent-login') errorMsg = 'Please login again';
-                
-                showMessage(elements.passwordModal.message, errorMsg, 'error');
+                showMessage(passwordMessage, errorMsg, 'error');
             } finally {
-                elements.passwordModal.btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
-                elements.passwordModal.btn.disabled = false;
+                updatePasswordBtn.innerHTML = '<i class="fas fa-save"></i> Update Password';
+                updatePasswordBtn.disabled = false;
             }
         }
 
         // Session Check
         async function checkSession() {
             showLoading('Resuming', 'Checking session...');
-            
             const saved = localStorage.getItem('nexusUser');
             const user = auth.currentUser;
-
             if (saved && user) {
                 try {
                     const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
-                    
                     if (userDoc.exists()) {
                         userData = userDoc.data();
-                        
                         if (userData.status === 'blocked') {
                             await signOut(auth);
                             localStorage.removeItem('nexusUser');
@@ -1757,13 +1705,11 @@
                             showLogin();
                             return;
                         }
-
                         currentUser = {
                             email: user.email,
                             uid: user.uid,
                             role: userData.role
                         };
-
                         await trackDevice(user.uid);
                         showDashboard();
                         loadUserProfile();
@@ -1774,57 +1720,51 @@
                     localStorage.removeItem('nexusUser');
                 }
             }
-            
             hideLoading();
         }
 
         // Event Listeners
-        function setupListeners() {
-            elements.login.btn.addEventListener('click', handleLogin);
-            elements.logoutBtn.addEventListener('click', handleLogout);
-            
-            elements.login.password.addEventListener('keypress', e => {
-                if (e.key === 'Enter') handleLogin();
-            });
+        loginBtn.addEventListener('click', handleLogin);
+        logoutBtnHeader.addEventListener('click', handleLogout);
+        document.getElementById('loginPassword').addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleLogin();
+        });
 
-            elements.changePasswordBtn.addEventListener('click', () => {
-                elements.passwordModal.modal.classList.remove('hidden');
-                elements.passwordModal.current.value = '';
-                elements.passwordModal.new.value = '';
-                elements.passwordModal.confirm.value = '';
-                elements.passwordModal.message.style.display = 'none';
-            });
+        changePasswordBtn.addEventListener('click', () => {
+            passwordModal.classList.remove('hidden');
+            currentPassword.value = '';
+            newPassword.value = '';
+            confirmPassword.value = '';
+            passwordMessage.style.display = 'none';
+        });
 
-            elements.passwordModal.close.addEventListener('click', () => {
-                elements.passwordModal.modal.classList.add('hidden');
-            });
+        closePasswordModal.addEventListener('click', () => {
+            passwordModal.classList.add('hidden');
+        });
 
-            elements.passwordModal.modal.addEventListener('click', e => {
-                if (e.target === elements.passwordModal.modal) {
-                    elements.passwordModal.modal.classList.add('hidden');
-                }
-            });
+        passwordModal.addEventListener('click', e => {
+            if (e.target === passwordModal) {
+                passwordModal.classList.add('hidden');
+            }
+        });
 
-            elements.passwordModal.btn.addEventListener('click', handleChangePassword);
+        updatePasswordBtn.addEventListener('click', handleChangePassword);
 
-            elements.passwordModal.confirm.addEventListener('keypress', e => {
-                if (e.key === 'Enter') handleChangePassword();
-            });
+        confirmPassword.addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleChangePassword();
+        });
 
-            onAuthStateChanged(auth, user => {
-                if (!user && !elements.login.section.classList.contains('hidden')) {
-                    // Already on login page, ignore
-                }
-            });
-        }
+        onAuthStateChanged(auth, user => {
+            if (!user && !loginSection.classList.contains('hidden')) {
+                // Already on login page, ignore
+            }
+        });
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            setupListeners();
             checkSession();
         });
 
-        // Make functions available globally for onclick handlers
         window.openVideo = (videoId) => {
             window.open(`v.html?videoId=${videoId}`, '_blank');
         };
