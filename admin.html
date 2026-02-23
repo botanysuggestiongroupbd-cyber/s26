@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Admin | Command Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --primary-light: #8a7cef;
+            --secondary: #00d2d3;
+            --secondary-dark: #00a8a9;
+            --accent: #fd79a8;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --gray: #636e72;
+            --gradient-1: linear-gradient(135deg, #6c5ce7, #a363d9);
+            --gradient-2: linear-gradient(135deg, #00d2d3, #00b894);
+            --gradient-3: linear-gradient(135deg, #fd79a8, #e84393);
+            --glass: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow-sm: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --blur: blur(10px);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0 0 L100 100 M100 0 L0 100" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></svg>');
+            background-size: 50px 50px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* Loading Overlay (same as user portal) */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: var(--blur);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: all 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            background: var(--glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loader-logo {
+            font-size: 4rem;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .loader {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .loader-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--secondary);
+            border-right-color: var(--accent);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .loader-inner {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary-light);
+            border-left-color: white;
+            animation: spinReverse 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
+
+        .loader-text {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .loader-subtext {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        .loader-progress {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .loader-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            width: 0%;
+            animation: progress 2s ease-in-out infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; margin-left: 0; }
+            50% { width: 70%; margin-left: 30%; }
+            100% { width: 0%; margin-left: 100%; }
+        }
+
+        .loader-stats {
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .loader-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loader-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, white, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            letter-spacing: 1px;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(108, 92, 231, 0.3);
+        }
+
+        /* Login Container */
+        .login-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            padding: 30px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.4), rgba(0, 210, 211, 0.4));
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .login-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-content {
+            padding: 30px;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(0, 210, 211, 0.3));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .dashboard-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .user-info-text {
+            color: white;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .dashboard-content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .stat-content h3 {
+            font-size: 1.8rem;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .stat-content p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Section */
+        .section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+
+        .section-title i {
+            color: var(--secondary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: white;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .input-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 1;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: white;
+            transition: all 0.3s ease;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 210, 211, 0.3);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+        }
+
+        select option {
+            background: var(--dark);
+            color: white;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #00997a);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #b02e2e);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #e0a800);
+            color: white;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-logout:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-block {
+            background: linear-gradient(135deg, var(--warning), #e0a800);
+        }
+
+        .btn-unblock {
+            background: linear-gradient(135deg, var(--success), #00997a);
+        }
+
+        .btn-devices {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, var(--danger), #b02e2e);
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .message-success {
+            background: linear-gradient(135deg, rgba(0, 184, 148, 0.2), rgba(0, 184, 148, 0.1));
+            border: 1px solid var(--success);
+            color: #fff;
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, rgba(214, 48, 49, 0.2), rgba(214, 48, 49, 0.1));
+            border: 1px solid var(--danger);
+            color: #fff;
+        }
+
+        .message-info {
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.1));
+            border: 1px solid var(--primary);
+            color: #fff;
+        }
+
+        .message-warning {
+            background: linear-gradient(135deg, rgba(253, 203, 110, 0.2), rgba(253, 203, 110, 0.1));
+            border: 1px solid var(--warning);
+            color: #fff;
+        }
+
+        /* Tables */
+        .desktop-table-view {
+            display: none;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+        }
+
+        thead {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-admin { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+        .role-moderator { background: linear-gradient(135deg, var(--secondary), var(--secondary-dark)); }
+        .role-user { background: linear-gradient(135deg, var(--gray), #4a4a4a); }
+        .status-active { background: linear-gradient(135deg, var(--success), #00997a); }
+        .status-inactive { background: linear-gradient(135deg, var(--danger), #b02e2e); }
+        .status-blocked { background: linear-gradient(135deg, var(--warning), #e0a800); }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-active-indicator { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .status-inactive-indicator { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .status-blocked-indicator { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+
+        /* Mobile Cards */
+        .mobile-card-view {
+            display: block;
+        }
+
+        .user-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .user-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .user-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .user-card-info h4 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .user-card-info p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .user-card-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: white;
+            font-weight: 500;
+        }
+
+        .user-card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-content {
+            padding: 25px;
+            background: var(--dark);
+        }
+
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .device-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .device-name {
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .device-time {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .device-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .device-detail i {
+            color: var(--secondary);
+            width: 20px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .video-management-btn-container {
+            display: flex;
+            justify-content: center;
+        }
+
+        .admin-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .admin-link a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .admin-link a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        @media (min-width: 481px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .desktop-table-view {
+                display: block;
+            }
+            .mobile-card-view {
+                display: none;
+            }
+            .stats-grid {
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .device-details {
+                grid-template-columns: 1fr;
+            }
+            .user-card-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loader-container">
+            <div class="loader-logo">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div class="loader">
+                <div class="loader-circle"></div>
+                <div class="loader-inner"></div>
+            </div>
+            <div class="loader-text" id="loadingMessage">Initializing Nexus Command</div>
+            <div class="loader-subtext" id="loadingSubtext">Securing connection...</div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
+            <div class="loader-stats">
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingStep">1</span>
+                    <span>Step</span>
+                </div>
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingProgress">0%</span>
+                    <span>Progress</span>
+                </div>
+                <div class="loader-stat">
+                    <span class="loader-stat-value" id="loadingTimer">0s</span>
+                    <span>Elapsed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚡ NEXUS COMMAND ⚡</h1>
+            <p>Administration Interface</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-container">
+            <div class="glass-card">
+                <div class="login-header">
+                    <div class="login-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h2>Admin Authentication</h2>
+                </div>
+                <div class="login-content">
+                    <div id="loginMessage" class="message"></div>
+                    
+                    <div class="form-group">
+                        <label><i class="far fa-envelope"></i> Email</label>
+                        <div class="input-container">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" placeholder="Enter admin email">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <div class="input-container">
+                            <i class="fas fa-key"></i>
+                            <input type="password" id="loginPassword" placeholder="Enter password">
+                        </div>
+                    </div>
+                    
+                    <button id="loginBtn" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Access Command Center
+                    </button>
+                    
+                    <div class="admin-link">
+                        <a href="index.html"><i class="fas fa-user"></i> User Portal</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="hidden">
+            <div class="glass-card">
+                <div class="dashboard-header">
+                    <h2>
+                        <i class="fas fa-tachometer-alt"></i>
+                        Command Center
+                    </h2>
+                    <div class="user-chip">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="user-info-text">
+                            <div class="user-email" id="adminEmail">admin@nexus.com</div>
+                            <div class="user-role" id="adminRoleDisplay">Admin</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div id="dashboardMessage" class="message"></div>
+                    
+                    <!-- Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-content">
+                                <h3 id="totalUsers">0</h3>
+                                <p>Total Users</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                            <div class="stat-content">
+                                <h3 id="activeUsers">0</h3>
+                                <p>Active</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+                            <div class="stat-content">
+                                <h3 id="blockedUsers">0</h3>
+                                <p>Blocked</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-desktop"></i></div>
+                            <div class="stat-content">
+                                <h3 id="totalDevices">0</h3>
+                                <p>Devices</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Management Shortcut -->
+                    <div class="section video-management-btn-container">
+                        <button id="videoManagementBtn" class="btn btn-secondary">
+                            <i class="fas fa-video"></i> Manage Video Library
+                        </button>
+                    </div>
+
+                    <!-- Create User Section -->
+                    <div class="section" id="createUserSection">
+                        <div class="section-title">
+                            <i class="fas fa-user-plus"></i> Create New User
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <div class="input-container">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="userName" placeholder="e.g., John Doe">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <div class="input-container">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="userEmail" placeholder="user@example.com">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Password (min. 6 characters)</label>
+                            <div class="input-container">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="userPassword" placeholder="••••••">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <div class="input-container">
+                                <i class="fas fa-tag"></i>
+                                <select id="userRole">
+                                    <option value="user">User</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Initial Status</label>
+                            <div class="input-container">
+                                <i class="fas fa-circle"></i>
+                                <select id="userStatus">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="blocked">Blocked</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone (optional)</label>
+                            <div class="input-container">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" id="userPhone" placeholder="+1234567890">
+                            </div>
+                        </div>
+                        <button id="createUserBtn" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Create User
+                        </button>
+                    </div>
+
+                    <!-- User Management Section -->
+                    <div class="section">
+                        <div class="section-title">
+                            <i class="fas fa-users-cog"></i> User Management
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="input-container">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="userSearch" placeholder="Search by name, email or phone...">
+                            </div>
+                        </div>
+
+                        <!-- Desktop Table -->
+                        <div class="desktop-table-view">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Devices</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr><td colspan="7" class="no-data">Loading users...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile Cards -->
+                        <div class="mobile-card-view">
+                            <div class="user-cards-container" id="userCardsContainer">
+                                <!-- Cards will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <div style="text-align: center;">
+                        <button id="logoutBtn" class="btn btn-logout">
+                            <i class="fas fa-power-off"></i> Exit Command Center
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Device Modal -->
+        <div id="deviceModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="glass-card">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-desktop"></i> Login Devices</h3>
+                        <button class="modal-close" id="closeDeviceModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-content" id="deviceModalContent">
+                        <!-- Device list will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Nexus Command © 2024 | Secure Administration</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            getDocs,
+            doc,
+            setDoc,
+            updateDoc,
+            deleteDoc,
+            getDoc,
+            serverTimestamp,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+        // Firebase Config (same as user portal)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJn31foXlB5ooSIdZ1aGcshMu955urDQo",
+            authDomain: "fouth-year.firebaseapp.com",
+            projectId: "fouth-year",
+            storageBucket: "fouth-year.firebasestorage.app",
+            messagingSenderId: "771603556892",
+            appId: "1:771603556892:web:51ae0bd68acf6678a14dd9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+        const loadingStep = document.getElementById('loadingStep');
+        const loadingProgress = document.getElementById('loadingProgress');
+        const loadingTimer = document.getElementById('loadingTimer');
+
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const videoManagementBtn = document.getElementById('videoManagementBtn');
+        const createUserBtn = document.getElementById('createUserBtn');
+        const loginMessage = document.getElementById('loginMessage');
+        const dashboardMessage = document.getElementById('dashboardMessage');
+        const adminEmail = document.getElementById('adminEmail');
+        const adminRoleDisplay = document.getElementById('adminRoleDisplay');
+        const usersTableBody = document.getElementById('usersTableBody');
+        const userCardsContainer = document.getElementById('userCardsContainer');
+        const userSearch = document.getElementById('userSearch');
+        const deviceModal = document.getElementById('deviceModal');
+        const closeDeviceModal = document.getElementById('closeDeviceModal');
+        const deviceModalContent = document.getElementById('deviceModalContent');
+        const userRoleSelect = document.getElementById('userRole');
+
+        const totalUsersEl = document.getElementById('totalUsers');
+        const activeUsersEl = document.getElementById('activeUsers');
+        const blockedUsersEl = document.getElementById('blockedUsers');
+        const totalDevicesEl = document.getElementById('totalDevices');
+
+        let currentAdmin = null;
+        let allUsers = [];
+        let userSnapshotUnsubscribe = null;
+
+        // Loading system
+        let loadingStartTime = null;
+        let loadingInterval = null;
+
+        function showLoading(message = 'Initializing Nexus Command...', subtext = 'Securing connection...') {
+            loadingOverlay.classList.remove('hidden');
+            loadingMessage.textContent = message;
+            loadingSubtext.textContent = subtext;
+            loadingStartTime = Date.now();
+            if (loadingInterval) clearInterval(loadingInterval);
+            loadingInterval = setInterval(updateLoadingTimer, 100);
+            simulateLoadingSteps();
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+                if (loadingInterval) {
+                    clearInterval(loadingInterval);
+                    loadingInterval = null;
+                }
+            }, 500);
+        }
+
+        function updateLoadingTimer() {
+            if (!loadingStartTime) return;
+            const elapsed = Math.floor((Date.now() - loadingStartTime) / 1000);
+            loadingTimer.textContent = `${elapsed}s`;
+        }
+
+        function simulateLoadingSteps() {
+            const steps = [
+                'Connecting to Nexus...',
+                'Verifying credentials...',
+                'Loading user data...',
+                'Scanning devices...',
+                'Preparing interface...',
+                'Ready!'
+            ];
+            let step = 1;
+            const interval = setInterval(() => {
+                if (step <= steps.length) {
+                    loadingSubtext.textContent = steps[step-1];
+                    loadingStep.textContent = step;
+                    loadingProgress.textContent = Math.floor((step/steps.length)*100) + '%';
+                    step++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        }
+
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message message-${type}`;
+            element.style.display = 'flex';
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Helper functions for device tracking (same as user portal)
+        function generateDeviceId() {
+            const info = navigator.userAgent + navigator.language + navigator.platform;
+            let hash = 0;
+            for (let i = 0; i < info.length; i++) {
+                hash = ((hash << 5) - hash) + info.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return 'dev_' + Math.abs(hash).toString(36);
+        }
+
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            return {
+                name: /mobile/i.test(ua) ? 'Mobile' : /tablet/i.test(ua) ? 'Tablet' : 'Desktop',
+                browser: ua.includes('Chrome') ? 'Chrome' : ua.includes('Firefox') ? 'Firefox' : ua.includes('Safari') ? 'Safari' : 'Unknown',
+                os: ua.includes('Windows') ? 'Windows' : ua.includes('Mac') ? 'macOS' : ua.includes('Linux') ? 'Linux' : ua.includes('Android') ? 'Android' : ua.includes('iOS') ? 'iOS' : 'Unknown'
+            };
+        }
+
+        async function getIPAndLocation() {
+            try {
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                const ip = ipData.ip;
+                const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                const locData = await locRes.json();
+                const location = locData.city ? `${locData.city}, ${locData.country_name}` : 'Unknown';
+                return { ip, location };
+            } catch {
+                return { ip: 'Unknown', location: 'Unknown' };
+            }
+        }
+
+        async function trackAdminLogin(user) {
+            try {
+                const deviceId = generateDeviceId();
+                const device = getDeviceInfo();
+                const { ip, location } = await getIPAndLocation();
+
+                const deviceInfo = {
+                    deviceId,
+                    deviceName: device.name,
+                    browser: device.browser,
+                    os: device.os,
+                    ip,
+                    location,
+                    lastLogin: new Date().toISOString(),
+                    isCurrent: true
+                };
+
+                const userRef = doc(db, 'nexus_users', user.uid);
+                const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    let devices = data.devices || [];
+                    devices = devices.map(d => ({ ...d, isCurrent: false }));
+                    const existing = devices.findIndex(d => d.deviceId === deviceId);
+                    if (existing > -1) {
+                        devices[existing] = deviceInfo;
+                    } else {
+                        if (devices.length >= 10) devices.shift();
+                        devices.push(deviceInfo);
+                    }
+                    await updateDoc(userRef, { devices });
+                }
+            } catch (e) {
+                console.error('Device tracking error:', e);
+            }
+        }
+
+        // Check if user is admin/moderator
+        async function checkAdminStatus(user) {
+            try {
+                const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
+                if (userDoc.exists()) {
+                    const role = userDoc.data().role;
+                    return ['admin', 'moderator'].includes(role);
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+            return false;
+        }
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const isAdmin = await checkAdminStatus(user);
+                if (isAdmin) {
+                    const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
+                    if (userDoc.exists()) {
+                        currentAdmin = {
+                            email: user.email,
+                            uid: user.uid,
+                            role: userDoc.data().role
+                        };
+                        localStorage.setItem('nexusAdmin', JSON.stringify(currentAdmin));
+                        showDashboard();
+                        loadUsers();
+                        startRealtimeUpdates();
+                        applyPermissions();
+                    } else {
+                        localStorage.removeItem('nexusAdmin');
+                        showLogin();
+                    }
+                } else {
+                    localStorage.removeItem('nexusAdmin');
+                    showLogin();
+                }
+            } else {
+                localStorage.removeItem('nexusAdmin');
+                showLogin();
+            }
+        });
+
+        // Apply permissions based on role
+        function applyPermissions() {
+            if (!currentAdmin) return;
+            const role = currentAdmin.role;
+            adminRoleDisplay.textContent = role === 'admin' ? '(Admin)' : '(Moderator)';
+            adminRoleDisplay.style.color = role === 'admin' ? 'var(--primary)' : 'var(--secondary)';
+
+            // Role select options
+            if (role === 'admin') {
+                userRoleSelect.innerHTML = `
+                    <option value="user">User</option>
+                    <option value="moderator">Moderator</option>
+                    <option value="admin">Admin</option>
+                `;
+            } else {
+                userRoleSelect.innerHTML = `<option value="user">User</option>`;
+            }
+        }
+
+        // Load users from nexus_users
+        async function loadUsers() {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'nexus_users'));
+                allUsers = [];
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    allUsers.push({ id: doc.id, ...data, createdAt: data.createdAt?.toDate() || null });
+                });
+                updateStats(allUsers);
+                renderUsersTable(allUsers);
+                renderUserCards(allUsers);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                usersTableBody.innerHTML = '<tr><td colspan="7" class="no-data">Failed to load users</td></tr>';
+            }
+        }
+
+        function startRealtimeUpdates() {
+            if (userSnapshotUnsubscribe) userSnapshotUnsubscribe();
+            userSnapshotUnsubscribe = onSnapshot(collection(db, 'nexus_users'), (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allUsers.push({ id: doc.id, ...data, createdAt: data.createdAt?.toDate() || null });
+                });
+                updateStats(allUsers);
+                renderUsersTable(allUsers);
+                renderUserCards(allUsers);
+            }, error => console.error('Realtime error:', error));
+        }
+
+        function updateStats(users) {
+            totalUsersEl.textContent = users.length;
+            activeUsersEl.textContent = users.filter(u => u.status === 'active').length;
+            blockedUsersEl.textContent = users.filter(u => u.status === 'blocked').length;
+            let deviceCount = 0;
+            users.forEach(u => { if (u.devices) deviceCount += u.devices.length; });
+            totalDevicesEl.textContent = deviceCount;
+        }
+
+        function renderUsersTable(users) {
+            if (users.length === 0) {
+                usersTableBody.innerHTML = '<tr><td colspan="7" class="no-data">No users found</td></tr>';
+                return;
+            }
+            usersTableBody.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const created = user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A';
+                const deviceCount = user.devices ? user.devices.length : 0;
+                const statusClass = user.status === 'active' ? 'status-active-indicator' : user.status === 'blocked' ? 'status-blocked-indicator' : 'status-inactive-indicator';
+                const statusText = user.status || 'inactive';
+
+                let actionButtons = '';
+                if (currentAdmin.role === 'admin') {
+                    actionButtons = `
+                        <div style="display: flex; gap: 5px;">
+                            ${user.status === 'blocked' 
+                                ? `<button class="action-btn btn-unblock btn-sm" data-user-id="${user.id}"><i class="fas fa-check-circle"></i> Unblock</button>`
+                                : `<button class="action-btn btn-block btn-sm" data-user-id="${user.id}"><i class="fas fa-ban"></i> Block</button>`
+                            }
+                            <button class="action-btn btn-devices btn-sm" data-user-id="${user.id}"><i class="fas fa-desktop"></i> ${deviceCount}</button>
+                            <button class="action-btn btn-delete btn-sm" data-user-id="${user.id}" data-user-email="${user.email}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                } else {
+                    actionButtons = `
+                        <button class="action-btn btn-devices btn-sm" data-user-id="${user.id}"><i class="fas fa-desktop"></i> ${deviceCount}</button>
+                        <span style="color: rgba(255,255,255,0.5);">(view only)</span>
+                    `;
+                }
+
+                row.innerHTML = `
+                    <td>${user.name || 'N/A'}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td><span class="badge role-${user.role || 'user'}">${user.role || 'user'}</span></td>
+                    <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
+                    <td>${deviceCount}</td>
+                    <td>${created}</td>
+                    <td>${actionButtons}</td>
+                `;
+                usersTableBody.appendChild(row);
+            });
+            attachActionListeners();
+        }
+
+        function renderUserCards(users) {
+            if (users.length === 0) {
+                userCardsContainer.innerHTML = '<div class="user-card"><div class="no-data">No users found</div></div>';
+                return;
+            }
+            userCardsContainer.innerHTML = '';
+            users.forEach(user => {
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                const created = user.createdAt ? user.createdAt.toLocaleDateString() : 'N/A';
+                const deviceCount = user.devices ? user.devices.length : 0;
+                const statusClass = user.status === 'active' ? 'status-active' : user.status === 'blocked' ? 'status-blocked' : 'status-inactive';
+
+                let actionButtons = '';
+                if (currentAdmin.role === 'admin') {
+                    actionButtons = `
+                        ${user.status === 'blocked' 
+                            ? `<button class="action-btn btn-unblock btn-sm" data-user-id="${user.id}"><i class="fas fa-check-circle"></i> Unblock</button>`
+                            : `<button class="action-btn btn-block btn-sm" data-user-id="${user.id}"><i class="fas fa-ban"></i> Block</button>`
+                        }
+                        <button class="action-btn btn-devices btn-sm" data-user-id="${user.id}"><i class="fas fa-desktop"></i> Devices (${deviceCount})</button>
+                        <button class="action-btn btn-delete btn-sm" data-user-id="${user.id}" data-user-email="${user.email}"><i class="fas fa-trash"></i> Delete</button>
+                    `;
+                } else {
+                    actionButtons = `
+                        <button class="action-btn btn-devices btn-sm" data-user-id="${user.id}"><i class="fas fa-desktop"></i> Devices (${deviceCount})</button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="user-card-header">
+                        <div class="user-card-info">
+                            <h4>${user.name || 'N/A'}</h4>
+                            <p>${user.email || 'N/A'}</p>
+                        </div>
+                        <span class="badge ${statusClass}">${user.status || 'inactive'}</span>
+                    </div>
+                    <div class="user-card-details">
+                        <div><span class="detail-label">Role</span><span class="detail-value badge role-${user.role || 'user'}">${user.role || 'user'}</span></div>
+                        <div><span class="detail-label">Devices</span><span class="detail-value">${deviceCount}</span></div>
+                        <div><span class="detail-label">Created</span><span class="detail-value">${created}</span></div>
+                    </div>
+                    <div class="user-card-actions">
+                        ${actionButtons}
+                    </div>
+                `;
+                userCardsContainer.appendChild(card);
+            });
+            attachActionListeners();
+        }
+
+        function attachActionListeners() {
+            // Devices
+            document.querySelectorAll('.btn-devices').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const userId = e.currentTarget.getAttribute('data-user-id');
+                    const user = allUsers.find(u => u.id === userId);
+                    if (user) await showUserDevices(user);
+                });
+            });
+
+            if (currentAdmin.role === 'admin') {
+                // Block/Unblock
+                document.querySelectorAll('.btn-block, .btn-unblock').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const userId = e.currentTarget.getAttribute('data-user-id');
+                        const user = allUsers.find(u => u.id === userId);
+                        if (!user) return;
+                        const newStatus = user.status === 'blocked' ? 'active' : 'blocked';
+                        try {
+                            await updateDoc(doc(db, 'nexus_users', userId), { status: newStatus });
+                            showMessage(dashboardMessage, `User ${user.name} ${newStatus === 'blocked' ? 'blocked' : 'unblocked'}!`, 'success');
+                        } catch (error) {
+                            showMessage(dashboardMessage, 'Failed to update status', 'error');
+                        }
+                    });
+                });
+
+                // Delete
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const userId = e.currentTarget.getAttribute('data-user-id');
+                        const userEmail = e.currentTarget.getAttribute('data-user-email');
+                        const user = allUsers.find(u => u.id === userId);
+                        if (!user) return;
+                        if (confirm(`Are you sure you want to delete user ${user.name} (${user.email})? This cannot be undone.`)) {
+                            try {
+                                await deleteDoc(doc(db, 'nexus_users', userId));
+                                showMessage(dashboardMessage, `User ${user.name} deleted.`, 'success');
+                            } catch (error) {
+                                showMessage(dashboardMessage, 'Failed to delete user', 'error');
+                            }
+                        }
+                    });
+                });
+            }
+        }
+
+        async function showUserDevices(user) {
+            deviceModalContent.innerHTML = '<div class="no-data"><i class="fas fa-spinner fa-spin"></i> Loading devices...</div>';
+            deviceModal.classList.remove('hidden');
+
+            try {
+                const userDoc = await getDoc(doc(db, 'nexus_users', user.id));
+                const devices = userDoc.data()?.devices || [];
+                if (devices.length === 0) {
+                    deviceModalContent.innerHTML = '<div class="no-data"><i class="fas fa-desktop"></i><p>No devices found.</p></div>';
+                    return;
+                }
+
+                let html = '<div class="device-list">';
+                devices.sort((a,b) => new Date(b.lastLogin) - new Date(a.lastLogin)).forEach(dev => {
+                    const loginTime = new Date(dev.lastLogin).toLocaleString();
+                    html += `
+                        <div class="device-item">
+                            <div class="device-header">
+                                <span class="device-name"><i class="fas fa-${dev.os?.includes('Windows') ? 'desktop' : (dev.os?.includes('Android')||dev.os?.includes('iOS') ? 'mobile-alt' : 'laptop')}"></i> ${dev.deviceName || 'Unknown'}</span>
+                                <span class="device-time">${loginTime}</span>
+                            </div>
+                            <div class="device-details">
+                                <span><i class="fas fa-globe"></i> ${dev.browser || 'Unknown'}</span>
+                                <span><i class="fas fa-cog"></i> ${dev.os || 'Unknown'}</span>
+                                <span><i class="fas fa-network-wired"></i> ${dev.ip || 'Unknown'}</span>
+                                <span><i class="fas fa-map-marker-alt"></i> ${dev.location || 'Unknown'}</span>
+                            </div>
+                            ${!dev.isCurrent && currentAdmin.role === 'admin' ? `
+                                <div style="margin-top: 10px; text-align: right;">
+                                    <button class="action-btn btn-danger btn-sm remove-device" data-user-id="${user.id}" data-device-id="${dev.deviceId}"><i class="fas fa-sign-out-alt"></i> Remove</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                deviceModalContent.innerHTML = html;
+
+                // Remove device handler
+                document.querySelectorAll('.remove-device').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const userId = e.currentTarget.getAttribute('data-user-id');
+                        const deviceId = e.currentTarget.getAttribute('data-device-id');
+                        if (confirm('Remove this device?')) {
+                            const userRef = doc(db, 'nexus_users', userId);
+                            const snap = await getDoc(userRef);
+                            const currentDevices = snap.data().devices || [];
+                            const updated = currentDevices.filter(d => d.deviceId !== deviceId);
+                            await updateDoc(userRef, { devices: updated });
+                            showMessage(dashboardMessage, 'Device removed', 'success');
+                            deviceModal.classList.add('hidden');
+                        }
+                    });
+                });
+            } catch (error) {
+                deviceModalContent.innerHTML = '<div class="no-data">Error loading devices</div>';
+            }
+        }
+
+        // Login handler
+        async function handleAdminLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showMessage(loginMessage, 'Please enter email and password', 'error');
+                return;
+            }
+
+            showLoading('Authenticating', 'Verifying credentials...');
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            loginBtn.disabled = true;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const userDoc = await getDoc(doc(db, 'nexus_users', user.uid));
+                if (!userDoc.exists()) {
+                    await signOut(auth);
+                    hideLoading();
+                    showMessage(loginMessage, 'User not found in Nexus', 'error');
+                    return;
+                }
+
+                const userRole = userDoc.data().role;
+                if (!['admin', 'moderator'].includes(userRole)) {
+                    await signOut(auth);
+                    hideLoading();
+                    showMessage(loginMessage, 'Access denied. Admin/Moderator only.', 'error');
+                    return;
+                }
+
+                currentAdmin = { email: user.email, uid: user.uid, role: userRole };
+                await trackAdminLogin(user);
+                localStorage.setItem('nexusAdmin', JSON.stringify(currentAdmin));
+                showMessage(loginMessage, 'Login successful!', 'success');
+                setTimeout(() => {
+                    hideLoading();
+                    showDashboard();
+                    loadUsers();
+                    startRealtimeUpdates();
+                    applyPermissions();
+                }, 1000);
+            } catch (error) {
+                hideLoading();
+                let msg = 'Login failed';
+                if (error.code === 'auth/invalid-credential') msg = 'Invalid email or password';
+                else if (error.code === 'auth/user-not-found') msg = 'No account found';
+                showMessage(loginMessage, msg, 'error');
+            } finally {
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Access Command Center';
+                loginBtn.disabled = false;
+            }
+        }
+
+        // Create user
+        async function handleCreateUser() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            const status = document.getElementById('userStatus').value;
+            const phone = document.getElementById('userPhone').value;
+
+            if (!name || !email || !password) {
+                showMessage(dashboardMessage, 'Name, email and password required', 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showMessage(dashboardMessage, 'Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            if (currentAdmin.role === 'moderator' && role !== 'user') {
+                showMessage(dashboardMessage, 'Moderators can only create regular users', 'error');
+                return;
+            }
+
+            showLoading('Creating user', 'Setting up account...');
+            createUserBtn.disabled = true;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                const userData = {
+                    uid: user.uid,
+                    name,
+                    email,
+                    role,
+                    status,
+                    phone: phone || '',
+                    createdAt: serverTimestamp(),
+                    createdBy: currentAdmin.email,
+                    createdByRole: currentAdmin.role,
+                    devices: []
+                };
+
+                await setDoc(doc(db, 'nexus_users', user.uid), userData);
+
+                document.getElementById('userName').value = '';
+                document.getElementById('userEmail').value = '';
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userPhone').value = '';
+
+                hideLoading();
+                showMessage(dashboardMessage, `User ${name} created successfully!`, 'success');
+            } catch (error) {
+                hideLoading();
+                let msg = 'Creation failed';
+                if (error.code === 'auth/email-already-in-use') msg = 'Email already in use';
+                showMessage(dashboardMessage, msg, 'error');
+            } finally {
+                createUserBtn.disabled = false;
+            }
+        }
+
+        // Logout
+        async function handleLogout() {
+            if (userSnapshotUnsubscribe) userSnapshotUnsubscribe();
+            showLoading('Signing out', 'Closing session...');
+            await signOut(auth);
+            localStorage.removeItem('nexusAdmin');
+            currentAdmin = null;
+            setTimeout(() => {
+                hideLoading();
+                showLogin();
+                showMessage(loginMessage, 'Logged out successfully', 'info');
+            }, 1000);
+        }
+
+        function showDashboard() {
+            loginSection.classList.add('hidden');
+            dashboardSection.classList.remove('hidden');
+            adminEmail.textContent = currentAdmin.email;
+        }
+
+        function showLogin() {
+            loginSection.classList.remove('hidden');
+            dashboardSection.classList.add('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Search
+        function handleUserSearch() {
+            const term = userSearch.value.toLowerCase().trim();
+            if (!term) {
+                renderUsersTable(allUsers);
+                renderUserCards(allUsers);
+                return;
+            }
+            const filtered = allUsers.filter(u => 
+                (u.name && u.name.toLowerCase().includes(term)) ||
+                (u.email && u.email.toLowerCase().includes(term)) ||
+                (u.phone && u.phone.includes(term))
+            );
+            renderUsersTable(filtered);
+            renderUserCards(filtered);
+        }
+
+        // Event listeners
+        loginBtn.addEventListener('click', handleAdminLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        videoManagementBtn.addEventListener('click', () => window.location.href = 'video.html');
+        createUserBtn.addEventListener('click', handleCreateUser);
+        closeDeviceModal.addEventListener('click', () => deviceModal.classList.add('hidden'));
+        deviceModal.addEventListener('click', (e) => e.target === deviceModal && deviceModal.classList.add('hidden'));
+        userSearch.addEventListener('input', handleUserSearch);
+
+        document.getElementById('loginPassword').addEventListener('keypress', (e) => e.key === 'Enter' && handleAdminLogin());
+
+        // Check session on load
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoading('Resuming session', 'Checking authentication...');
+            setTimeout(() => {
+                hideLoading();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
